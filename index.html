@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Física — Cinemática Interactiva</title>
+<meta name="description" content="Laboratorio virtual de física: simuladores interactivos de cinemática con p5.js y Chart.js para estudiantes universitarios.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#05070f; --surface:#0d1120; --border:rgba(255,255,255,0.08);
+  --accent1:#00e5ff; --accent2:#ff3c6e; --accent3:#a3ff6b; --accent4:#ffd166;
+  --accent5:#b57bee; --accent6:#ff9f43;
+  --text:#e8ecf8; --muted:#7a85a0; --card:rgba(255,255,255,0.04);
+  --glow1:0 0 30px rgba(0,229,255,0.25); --glow2:0 0 30px rgba(255,60,110,0.25);
+  --glow3:0 0 30px rgba(163,255,107,0.25); --glow4:0 0 30px rgba(255,209,102,0.25);
+  --glow5:0 0 30px rgba(181,123,238,0.25); --glow6:0 0 30px rgba(255,159,67,0.25);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Syne',sans-serif; overflow-x:hidden;
+}
+
+body::before{
+  content:''; position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size:40px 40px; pointer-events:none; z-index:0;
+}
+
+/* ── SCREENS ── */
+.screen{ display:none; min-height:100vh; padding:40px 20px; animation:fade 0.4s ease; position:relative; z-index:1; }
+.screen.active{ display:flex; flex-direction:column; align-items:center; justify-content:center; }
+@keyframes fade{ from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+
+/* ── WELCOME ── */
+.welcome-badge{
+  font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.18em;
+  text-transform:uppercase; color:var(--accent1); border:1px solid rgba(0,229,255,0.3);
+  padding:6px 16px; border-radius:100px; margin-bottom:32px;
+  animation:pulse-border 3s ease-in-out infinite;
+}
+@keyframes pulse-border{
+  0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,0.2);}
+  50%{box-shadow:0 0 18px 4px rgba(0,229,255,0.15);}
+}
+
+.welcome-title{ font-size:clamp(2.8rem,7vw,6rem); font-weight:800; text-align:center; line-height:1.1; }
+.welcome-title .line2{
+  display:block;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+
+.welcome-subtitle{
+  font-family:'Space Mono',monospace; font-size:0.9rem; color:var(--muted);
+  margin-top:20px; max-width:520px; text-align:center; line-height:1.8;
+}
+
+.welcome-stats{
+  display:flex; gap:32px; margin-top:40px; flex-wrap:wrap; justify-content:center;
+}
+.stat-item{ text-align:center; }
+.stat-num{
+  font-family:'Space Mono',monospace; font-size:1.6rem; font-weight:700;
+  color:var(--accent1); display:block;
+}
+.stat-label{ font-family:'Space Mono',monospace; font-size:0.62rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:4px; }
+
+.btn-primary{
+  margin-top:50px; background:var(--accent1); color:var(--bg); font-family:'Syne',sans-serif;
+  font-weight:800; padding:14px 40px; border:none; border-radius:8px; cursor:pointer;
+  text-transform:uppercase; font-size:0.9rem; letter-spacing:0.06em;
+  box-shadow:var(--glow1); transition:0.25s;
+}
+.btn-primary:hover{ transform:translateY(-3px); box-shadow:0 0 50px rgba(0,229,255,0.4); }
+
+/* ── MENU ── */
+#screen-menu{ justify-content:flex-start; padding-top:80px; }
+
+.btn-back-top{
+  align-self:flex-start; margin-bottom:40px;
+  background:transparent; border:1px solid var(--border); color:var(--text);
+  padding:8px 18px; border-radius:8px; font-family:'Space Mono',monospace;
+  font-size:0.75rem; cursor:pointer; transition:0.2s;
+}
+.btn-back-top:hover{ background:var(--card); border-color:rgba(255,255,255,0.2); }
+
+.menu-header h1{ font-size:2.5rem; font-weight:800; }
+.menu-header p{ font-family:'Space Mono',monospace; color:var(--muted); margin-top:10px; font-size:0.8rem; }
+
+/* section divider */
+.section-label{
+  align-self:flex-start; width:100%; max-width:1100px;
+  font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.18em;
+  text-transform:uppercase; color:var(--muted);
+  margin-top:40px; margin-bottom:14px;
+  padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+.section-label span{ color:var(--accent1); }
+
+.sim-cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:18px; max-width:1100px; width:100%;
+}
+
+.sim-card{
+  text-decoration:none; color:inherit;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; padding:28px 24px; transition:0.25s;
+  position:relative; overflow:hidden;
+}
+.sim-card::before{
+  content:''; position:absolute; inset:0; opacity:0;
+  transition:opacity 0.3s;
+}
+.sim-card:hover{ transform:translateY(-5px); }
+
+/* accent hover per class */
+.sim-card.c1:hover{border-color:var(--accent1);box-shadow:var(--glow1);}
+.sim-card.c2:hover{border-color:var(--accent2);box-shadow:var(--glow2);}
+.sim-card.c3:hover{border-color:var(--accent3);box-shadow:var(--glow3);}
+.sim-card.c4:hover{border-color:var(--accent4);box-shadow:var(--glow4);}
+.sim-card.c5:hover{border-color:var(--accent5);box-shadow:var(--glow5);}
+.sim-card.c6:hover{border-color:var(--accent6);box-shadow:var(--glow6);}
+.sim-card.c1n:hover{border-color:var(--accent1);box-shadow:var(--glow1);}
+.sim-card.c2n:hover{border-color:var(--accent2);box-shadow:var(--glow2);}
+.sim-card.c3n:hover{border-color:var(--accent3);box-shadow:var(--glow3);}
+
+.card-tag{
+  font-family:'Space Mono',monospace; font-size:0.62rem;
+  letter-spacing:0.15em; text-transform:uppercase; margin-bottom:12px;
+}
+.c1 .card-tag{color:var(--accent1);} .c2 .card-tag{color:var(--accent2);}
+.c3 .card-tag{color:var(--accent3);} .c4 .card-tag{color:var(--accent4);}
+.c5 .card-tag{color:var(--accent5);} .c6 .card-tag{color:var(--accent6);}
+.c1n .card-tag{color:var(--accent1);} .c2n .card-tag{color:var(--accent2);}
+.c3n .card-tag{color:var(--accent3);}
+
+.card-icon{ font-size:1.8rem; margin-bottom:10px; display:block; }
+
+.card-title{ font-size:1.15rem; font-weight:700; margin-bottom:8px; }
+
+.card-desc{
+  font-family:'Space Mono',monospace; font-size:0.72rem;
+  color:var(--muted); line-height:1.7;
+}
+
+.card-badge-new{
+  position:absolute; top:14px; right:14px;
+  background:rgba(163,255,107,0.15); color:var(--accent3);
+  border:1px solid rgba(163,255,107,0.3);
+  font-family:'Space Mono',monospace; font-size:0.58rem;
+  letter-spacing:0.1em; text-transform:uppercase;
+  padding:2px 8px; border-radius:20px;
+}
+
+/* ── HISTORIAL ── */
+.historial-section{
+  width:100%; max-width:1100px; margin-top:48px;
+  border-top:1px solid var(--border); padding-top:28px;
+}
+.historial-title{
+  font-family:'Space Mono',monospace; font-size:0.65rem;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:16px;
+}
+.historial-list{
+  display:flex; flex-direction:column; gap:8px;
+}
+.hist-item{
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:8px; padding:10px 16px;
+  text-decoration:none; color:var(--text);
+  transition:0.2s;
+}
+.hist-item:hover{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.16); }
+.hist-name{
+  font-family:'Space Mono',monospace; font-size:0.75rem; font-weight:700; color:var(--accent1);
+}
+.hist-time{
+  font-family:'Space Mono',monospace; font-size:0.65rem; color:var(--muted);
+}
+.hist-empty{
+  font-family:'Space Mono',monospace; font-size:0.72rem; color:var(--muted);
+  padding:10px 0;
+}
+
+.btn-clear-hist{
+  margin-top:10px; background:transparent; border:1px solid var(--border);
+  color:var(--muted); font-family:'Space Mono',monospace; font-size:0.65rem;
+  padding:5px 14px; border-radius:6px; cursor:pointer; transition:0.2s;
+}
+.btn-clear-hist:hover{ color:var(--accent2); border-color:var(--accent2); }
+
+/* ── Responsive ── */
+@media(max-width:600px){
+  .welcome-stats{ gap:20px; }
+  .sim-cards{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- WELCOME -->
+<section id="screen-welcome" class="screen active">
+  <div class="welcome-badge">⚗ Laboratorio Virtual de Física</div>
+
+  <h1 class="welcome-title">
+    Simulador de
+    <span class="line2">Cinemática</span>
+  </h1>
+
+  <p class="welcome-subtitle">
+    Explora los principios del movimiento mediante simulaciones interactivas
+    con precisión física, gráficas en tiempo real y análisis vectorial.
+  </p>
+
+  <div class="welcome-stats">
+    <div class="stat-item">
+      <span class="stat-num" id="statSims">9</span>
+      <span class="stat-label">Simuladores</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="statSessions">0</span>
+      <span class="stat-label">Sesiones</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">∞</span>
+      <span class="stat-label">Parámetros</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="showMenu()">
+    Explorar simulaciones →
+  </button>
+</section>
+
+<!-- MENU -->
+<section id="screen-menu" class="screen">
+
+  <button class="btn-back-top" onclick="showWelcome()">← Volver</button>
+
+  <div class="menu-header">
+    <h1>Elige tu simulación</h1>
+    <p>// Selecciona el tipo de movimiento que deseas analizar</p>
+  </div>
+
+  <!-- EXISTENTES -->
+  <div class="section-label">// <span>01</span> — Simuladores existentes</div>
+  <div class="sim-cards" id="existing-cards">
+
+    <a href="simulators/mru+mcu_simulacion.html" class="sim-card c1" onclick="registrarHistorial('MRU + MCU', 'simulators/mru+mcu_simulacion.html')">
+      <span class="card-icon">↔ ↺</span>
+      <div class="card-tag">MRU + MCU</div>
+      <div class="card-title">Rectilíneo y Circular</div>
+      <p class="card-desc">Transición de movimiento lineal a circular uniforme con análisis de velocidades.</p>
+    </a>
+
+    <a href="simulators/mua_simulacion.html" class="sim-card c2" onclick="registrarHistorial('MUA', 'simulators/mua_simulacion.html')">
+      <span class="card-icon">🚀</span>
+      <div class="card-tag">MUA</div>
+      <div class="card-title">Uniformemente Acelerado</div>
+      <p class="card-desc">Aceleración constante, gráficas x(t) y v(t), vectores de fuerza en tiempo real.</p>
+    </a>
+
+    <a href="simulators/mua_friccion.html" class="sim-card c3" onclick="registrarHistorial('MUA + Fricción', 'simulators/mua_friccion.html')">
+      <span class="card-icon">📦</span>
+      <div class="card-tag">MUA + Fricción</div>
+      <div class="card-title">Con Fricción Cinética</div>
+      <p class="card-desc">Masa, coeficiente de rozamiento cinético y vectores de fuerza simultáneos.</p>
+    </a>
+
+    <a href="simulators/movimiento_variado.html" class="sim-card c4" onclick="registrarHistorial('Movimiento Variado', 'simulators/movimiento_variado.html')">
+      <span class="card-icon">∫</span>
+      <div class="card-tag">MV</div>
+      <div class="card-title">Movimiento Variado</div>
+      <p class="card-desc">Aceleración dependiente del tiempo con cálculo simbólico integrado.</p>
+    </a>
+
+  </div>
+
+  <!-- NUEVOS -->
+  <div class="section-label">// <span>02</span> — Nuevos simuladores</div>
+  <div class="sim-cards" id="new-cards">
+
+    <a href="simulators/tiro_parabolico.html" class="sim-card c5" onclick="registrarHistorial('Tiro Parabólico', 'simulators/tiro_parabolico.html')">
+      <span class="card-icon">🎯</span>
+      <div class="card-tag">PROYECTIL</div>
+      <div class="card-title">Tiro Parabólico</div>
+      <p class="card-desc">Velocidad inicial y ángulo ajustables. Trayectoria, alcance, altura máxima, vectores Vx/Vy.</p>
+      <span class="card-badge-new">nuevo</span>
+    </a>
+
+    <a href="simulators/plano_inclinado.html" class="sim-card c6" onclick="registrarHistorial('Plano Inclinado', 'simulators/plano_inclinado.html')">
+      <span class="card-icon">📐</span>
+      <div class="card-tag">PLANO INCLINADO</div>
+      <div class="card-title">Plano Inclinado</div>
+      <p class="card-desc">Caja sobre rampa con ángulo ajustable. Vectores Peso, Normal, Fricción y F. neta en tiempo real.</p>
+      <span class="card-badge-new">nuevo</span>
+    </a>
+
+    <a href="simulators/pendulo_simple.html" class="sim-card c1n" onclick="registrarHistorial('Péndulo Simple', 'simulators/pendulo_simple.html')">
+      <span class="card-icon">⏱</span>
+      <div class="card-tag">PÉNDULO</div>
+      <div class="card-title">Péndulo Simple</div>
+      <p class="card-desc">Longitud y ángulo inicial. Periodo teórico vs. simulado. Gráfica θ(t) con integración RK4.</p>
+      <span class="card-badge-new">nuevo</span>
+    </a>
+
+    <a href="simulators/atwood.html" class="sim-card c2n" onclick="registrarHistorial('Máquina de Atwood', 'simulators/atwood.html')">
+      <span class="card-icon">⚖️</span>
+      <div class="card-tag">ATWOOD</div>
+      <div class="card-title">Máquina de Atwood</div>
+      <p class="card-desc">Dos masas en polea. Aceleración y tensión calculadas analíticamente. Animación del movimiento.</p>
+      <span class="card-badge-new">nuevo</span>
+    </a>
+
+    <a href="simulators/caja_vehiculo.html" class="sim-card c3n" onclick="registrarHistorial('Caja sobre Vehículo', 'simulators/caja_vehiculo.html')">
+      <span class="card-icon">🚚</span>
+      <div class="card-tag">DINÁMICA</div>
+      <div class="card-title">Caja sobre Vehículo</div>
+      <p class="card-desc">Camión con aceleración/frenado. La caja desliza si la fricción estática máxima es superada.</p>
+      <span class="card-badge-new">nuevo</span>
+    </a>
+
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="historial-section" id="historialSection">
+    <div class="historial-title">// Últimas sesiones</div>
+    <div class="historial-list" id="historialList">
+      <div class="hist-empty">Sin sesiones registradas aún.</div>
+    </div>
+    <button class="btn-clear-hist" onclick="limpiarHistorial()">✕ Limpiar historial</button>
+  </div>
+
+</section>
+
+<script>
+// ── Historial ─────────────────────────────────────────────────────
+const HIST_KEY = 'simHistorial_v2';
+const MAX_HIST = 5;
+
+function getHistorial() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; }
+  catch { return []; }
+}
+
+function registrarHistorial(nombre, url) {
+  const hist = getHistorial().filter(h => h.nombre !== nombre);
+  hist.unshift({ nombre, url, ts: Date.now() });
+  const limitado = hist.slice(0, MAX_HIST);
+  localStorage.setItem(HIST_KEY, JSON.stringify(limitado));
+  // increment session counter
+  const cnt = parseInt(localStorage.getItem('simSessions_v2') || '0') + 1;
+  localStorage.setItem('simSessions_v2', cnt);
+}
+
+function renderHistorial() {
+  const lista = document.getElementById('historialList');
+  const hist  = getHistorial();
+  if (!hist.length) {
+    lista.innerHTML = '<div class="hist-empty">Sin sesiones registradas aún.</div>';
+    return;
+  }
+  lista.innerHTML = hist.map(h => {
+    const d = new Date(h.ts);
+    const ts = `${d.toLocaleDateString('es')} ${d.toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}`;
+    return `<a href="${h.url}" class="hist-item">
+      <span class="hist-name">← ${h.nombre}</span>
+      <span class="hist-time">${ts}</span>
+    </a>`;
+  }).join('');
+}
+
+function limpiarHistorial() {
+  localStorage.removeItem(HIST_KEY);
+  renderHistorial();
+}
+
+// ── Screen transitions ────────────────────────────────────────────
+function showMenu() {
+  document.getElementById('screen-welcome').classList.remove('active');
+  document.getElementById('screen-menu').classList.add('active');
+  window.location.hash = 'menu';
+  renderHistorial();
+
+  const cnt = parseInt(localStorage.getItem('simSessions_v2') || '0');
+  document.getElementById('statSessions').textContent = cnt;
+}
+
+function showWelcome() {
+  document.getElementById('screen-menu').classList.remove('active');
+  document.getElementById('screen-welcome').classList.add('active');
+  window.location.hash = '';
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+(function init() {
+  const cnt = parseInt(localStorage.getItem('simSessions_v2') || '0');
+  document.getElementById('statSessions').textContent = cnt;
+
+  if (window.location.hash === '#menu') showMenu();
+})();
+</script>
+
+</body>
+</html>

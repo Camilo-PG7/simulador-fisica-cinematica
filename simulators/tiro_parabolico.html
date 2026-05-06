@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiro Parabólico — Simulador de Física</title>
+<meta name="description" content="Simulador de tiro parabólico: velocidad inicial, ángulo, trayectoria animada, alcance, altura máxima, gráficas x(t) y y(t).">
+<link rel="stylesheet" href="../core/sim-shared.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<style>
+.info-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px;
+}
+.info-box{
+  background:rgba(0,229,255,0.05); border:1px solid rgba(0,229,255,0.15);
+  border-radius:8px; padding:8px 10px; text-align:center;
+}
+.info-box-label{
+  font-family:'Space Mono',monospace; font-size:0.58rem;
+  letter-spacing:0.08em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:3px;
+}
+.info-box-val{
+  font-family:'Space Mono',monospace; font-size:0.85rem;
+  font-weight:700; color:var(--accent1);
+}
+.status-row{
+  display:flex; justify-content:center; gap:10px;
+  margin-top:12px; flex-wrap:wrap;
+}
+/* ✅ FIX CRÍTICO: dimensiones explícitas para que p5.js lea offsetWidth > 0 */
+#simContainer {
+  min-height: 420px;
+  width: 100%;
+  position: relative;
+  flex: 1;
+}
+#simContainer canvas { display: block; }
+</style>
+</head>
+<body>
+
+<a href="../index.html#menu" id="btnVolver">← Volver</a>
+
+<div class="main-container">
+  <div class="simulation-area">
+
+    <div class="panels-wrapper">
+
+      <!-- CONTROLS -->
+      <div class="controls" id="ctrlPanel">
+        <h3>⚙ Parámetros</h3>
+
+        <div class="param-group">
+          <div class="param-header">
+            <span class="param-label">Vel. inicial v₀ (m/s)</span>
+            <span class="param-value" id="v0Display">20.0</span>
+          </div>
+          <input type="range" id="v0" min="1" max="50" step="0.5" value="20" oninput="onParamChange()">
+        </div>
+
+        <div class="param-group">
+          <div class="param-header">
+            <span class="param-label">Ángulo θ (°)</span>
+            <span class="param-value" id="angDisplay">45</span>
+          </div>
+          <input type="range" id="angulo" min="1" max="89" step="1" value="45" oninput="onParamChange()">
+        </div>
+
+        <div class="param-group">
+          <div class="param-header">
+            <span class="param-label">Altura inicial y₀ (m)</span>
+            <span class="param-value" id="y0Display">0</span>
+          </div>
+          <input type="range" id="y0" min="0" max="30" step="0.5" value="0" oninput="onParamChange()">
+        </div>
+
+        <div class="btn-row-3">
+          <button class="sim-btn btn-pause"  id="btnPausa"  onclick="togglePause()">⏸ Pausa</button>
+          <button class="sim-btn btn-step"   id="btnStep"   onclick="stepSim()">▶ Step</button>
+          <button class="sim-btn btn-reset"  onclick="resetSim()">↺ Reset</button>
+        </div>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="sim-btn btn-csv"   onclick="exportCSV()">⬇ CSV</button>
+          <button class="sim-btn btn-share" onclick="shareURL()">🔗 Link</button>
+        </div>
+
+        <div class="step-box" id="stepBox">
+          <div class="step-eq" id="stepEq">—</div>
+        </div>
+      </div>
+
+      <!-- DATA PANEL -->
+      <div class="data-panel" id="dataPanel">
+        <h3>📊 Datos</h3>
+        <div class="data-row"><span class="data-key">Tiempo</span>     <span class="data-val val-white"  id="dTiempo">0.00 s</span></div>
+        <div class="data-row"><span class="data-key">x</span>          <span class="data-val val-cyan"   id="dX">0.00 m</span></div>
+        <div class="data-row"><span class="data-key">y</span>          <span class="data-val val-cyan"   id="dY">0.00 m</span></div>
+        <div class="data-row"><span class="data-key">Vx</span>         <span class="data-val val-yellow" id="dVx">— m/s</span></div>
+        <div class="data-row"><span class="data-key">Vy</span>         <span class="data-val val-rose"   id="dVy">— m/s</span></div>
+        <div class="data-row"><span class="data-key">|V|</span>        <span class="data-val val-white"  id="dV">— m/s</span></div>
+
+        <div class="info-grid">
+          <div class="info-box"><div class="info-box-label">Alcance</div>    <div class="info-box-val" id="iAlcance">—</div></div>
+          <div class="info-box"><div class="info-box-label">H. Máx.</div>    <div class="info-box-val" id="iHmax">—</div></div>
+          <div class="info-box"><div class="info-box-label">T. vuelo</div>   <div class="info-box-val" id="iTvuelo">—</div></div>
+          <div class="info-box"><div class="info-box-label">T. H.máx</div>   <div class="info-box-val" id="iTaltura">—</div></div>
+        </div>
+      </div>
+    </div><!-- /.panels-wrapper -->
+
+    <div class="simulation-container" id="simContainer"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="graficas-container">
+
+    <div class="grafica-wrapper gw-cyan">
+      <div class="grafica-header">
+        <span class="graph-title">Posición X vs Tiempo</span>
+        <span class="chart-badge badge-cyan" id="badgeX">— m</span>
+      </div>
+      <div class="grafica-content"><canvas id="chartX"></canvas></div>
+      <div class="equation-box">
+        <p class="equation">x(t) = v₀·cos(θ)·t</p>
+        <p class="equation-explanation">Movimiento horizontal uniforme (sin resistencia)</p>
+      </div>
+    </div>
+
+    <div class="grafica-wrapper gw-rose">
+      <div class="grafica-header">
+        <span class="graph-title">Posición Y vs Tiempo</span>
+        <span class="chart-badge badge-rose" id="badgeY">— m</span>
+      </div>
+      <div class="grafica-content"><canvas id="chartY"></canvas></div>
+      <div class="equation-box">
+        <p class="equation">y(t) = y₀ + v₀·sin(θ)·t − ½g·t²</p>
+        <p class="equation-explanation">Movimiento vertical con gravedad g = 9.81 m/s²</p>
+      </div>
+    </div>
+
+    <div class="grafica-wrapper gw-yellow">
+      <div class="grafica-header">
+        <span class="graph-title">Velocidades vs Tiempo</span>
+        <span class="chart-badge badge-yellow" id="badgeV">— m/s</span>
+      </div>
+      <div class="grafica-content"><canvas id="chartV"></canvas></div>
+      <div class="equation-box">
+        <p class="equation">Vx = v₀cos(θ) · Vy = v₀sin(θ) − g·t</p>
+        <p class="equation-explanation">Vx constante · Vy decrece por gravedad</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VERIFICATION -->
+  <div class="verificacion-section">
+    <div class="verificacion-card">
+      <h4>✓ Pregunta de Verificación</h4>
+      <p class="pregunta-text" id="preguntaText">Lanza la simulación para generar una pregunta.</p>
+      <div class="respuesta-row">
+        <input type="number" class="respuesta-input" id="respuestaInput" placeholder="Tu respuesta (m)" step="0.01">
+        <button class="btn-verificar" onclick="verificar()">Verificar →</button>
+        <button class="btn-verificar" style="background:linear-gradient(135deg,#555,#333)" onclick="generarPregunta()">Nueva ❓</button>
+      </div>
+      <div class="feedback-box" id="feedbackBox"></div>
+    </div>
+  </div>
+
+</div><!-- /.main-container -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════════
+const g = 9.81;
+let v0 = 20, angDeg = 45, y0ini = 0;
+let angRad, vx0, vy0;
+let tiempo = 0, px = 0, py = 0, pausa = false;
+let landado = false;
+let trayectoria = [];
+let datosCSV    = [];
+let chartX, chartY, chartV;
+let stepPending = false;
+let alcance, hMax, tVuelo, tAlt;
+let escalaM2px, originX, originY;
+
+// ═══════════════════════════════════════════════════════════
+//  ✅ FIX: toda la inicialización dentro de DOMContentLoaded
+//  Antes estaba fuera (línea 187) causando que computeAnalytics()
+//  intentara acceder al DOM antes de que existiera.
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+  // Cargar params de URL
+  const sp = new URLSearchParams(location.search);
+  if (sp.has('v0'))  { document.getElementById('v0').value     = sp.get('v0');  v0     = +sp.get('v0'); }
+  if (sp.has('ang')) { document.getElementById('angulo').value = sp.get('ang'); angDeg = +sp.get('ang'); }
+  if (sp.has('y0'))  { document.getElementById('y0').value     = sp.get('y0');  y0ini  = +sp.get('y0'); }
+  syncDisplays();
+  computeAnalytics();
+});
+
+function syncDisplays() {
+  document.getElementById('v0Display').textContent  = parseFloat(document.getElementById('v0').value).toFixed(1);
+  document.getElementById('angDisplay').textContent  = document.getElementById('angulo').value;
+  document.getElementById('y0Display').textContent  = parseFloat(document.getElementById('y0').value).toFixed(1);
+}
+
+function computeAnalytics() {
+  angRad = angDeg * Math.PI / 180;
+  vx0    = v0 * Math.cos(angRad);
+  vy0    = v0 * Math.sin(angRad);
+  const disc = vy0*vy0 + 2*g*y0ini;
+  tVuelo = disc < 0 ? 0 : (vy0 + Math.sqrt(disc)) / g;
+  alcance = vx0 * tVuelo;
+  tAlt    = vy0 / g;
+  hMax    = y0ini + vy0*tAlt - 0.5*g*tAlt*tAlt;
+  if (tAlt < 0) { tAlt = 0; hMax = y0ini; }
+
+  document.getElementById('iAlcance').textContent  = alcance.toFixed(2)+' m';
+  document.getElementById('iHmax').textContent     = hMax.toFixed(2)+' m';
+  document.getElementById('iTvuelo').textContent   = tVuelo.toFixed(2)+' s';
+  document.getElementById('iTaltura').textContent  = tAlt.toFixed(2)+' s';
+
+  generarPregunta();
+}
+
+function onParamChange() {
+  v0     = parseFloat(document.getElementById('v0').value);
+  angDeg = parseFloat(document.getElementById('angulo').value);
+  y0ini  = parseFloat(document.getElementById('y0').value);
+  syncDisplays();
+  computeAnalytics();
+  updateURLParams();
+  resetSim();
+}
+
+function updateURLParams() {
+  const sp = new URLSearchParams({ v0, ang: angDeg, y0: y0ini });
+  history.replaceState(null, '', '?' + sp.toString());
+}
+
+// ═══════════════════════════════════════════════════════════
+//  p5.js — setup usa getBoundingClientRect() para dimensiones reales
+// ═══════════════════════════════════════════════════════════
+function setup() {
+  const cont = document.getElementById('simContainer');
+  const W = Math.max(cont.getBoundingClientRect().width, 300);
+  const c = createCanvas(W, 420);
+  c.parent(cont);
+  iniciarGraficas();
+  resetSim();
+}
+
+function windowResized() {
+  const cont = document.getElementById('simContainer');
+  const W = Math.max(cont.getBoundingClientRect().width, 300);
+  resizeCanvas(W, 420);
+}
+
+function draw() {
+  background(5, 7, 15);
+  calcEscala();
+  dibujarFondo();
+  dibujarEjes();
+  dibujarTrayectoria();
+
+  if (!pausa || stepPending) {
+    stepPending = false;
+    if (!landado) actualizarFisica();
+  }
+
+  dibujarProyectil();
+  dibujarVectores();
+  mostrarDatos();
+}
+
+function calcEscala() {
+  const margenX = 60, margenY = 50;
+  const maxX = Math.max(alcance, 10);
+  const maxY = Math.max(hMax + y0ini + 5, 10);
+  const scX  = (width  - margenX * 2) / maxX;
+  const scY  = (height - margenY * 2) / maxY;
+  escalaM2px = Math.min(scX, scY, 14);
+  originX = 60;
+  originY = height - 40;
+}
+
+function dibujarFondo() {
+  stroke(255,255,255,6); strokeWeight(1);
+  const paso = Math.round(10 / escalaM2px) * 10 || 10;
+  for (let mx = 0; mx <= alcance*1.2; mx += paso) {
+    const sx = originX + mx * escalaM2px;
+    if (sx > width) break;
+    line(sx, 40, sx, originY);
+  }
+  for (let my = 0; my <= (hMax+y0ini)*1.3; my += paso) {
+    const sy = originY - my * escalaM2px;
+    if (sy < 40) break;
+    line(originX, sy, width-20, sy);
+  }
+}
+
+function dibujarEjes() {
+  stroke(255,255,255,60); strokeWeight(2);
+  line(originX, 20, originX, originY+2);
+  line(originX-2, originY, width-20, originY);
+  stroke(163,255,107,80); strokeWeight(2);
+  line(originX, originY - y0ini*escalaM2px, width-20, originY - y0ini*escalaM2px);
+
+  noStroke(); fill(255,255,255,120); textSize(10); textFont('monospace');
+  textAlign(CENTER); text('x (m)', width/2, originY+30);
+  textAlign(LEFT); push(); translate(18, height/2); rotate(-HALF_PI); text('y (m)', 0, 0); pop();
+  textAlign(LEFT);
+}
+
+function dibujarTrayectoria() {
+  if (trayectoria.length < 2) return;
+  noFill();
+  stroke(0, 229, 255, 80); strokeWeight(1.5);
+  beginShape();
+  for (const p of trayectoria) {
+    vertex(originX + p.x*escalaM2px, originY - p.y*escalaM2px);
+  }
+  endShape();
+
+  stroke(255,255,255,25); strokeWeight(1);
+  beginShape();
+  const steps = 80;
+  for (let i = 0; i <= steps; i++) {
+    const t = (tVuelo / steps) * i;
+    const ax = vx0 * t;
+    const ay = y0ini + vy0*t - 0.5*g*t*t;
+    vertex(originX + ax*escalaM2px, originY - ay*escalaM2px);
+  }
+  endShape();
+}
+
+function dibujarProyectil() {
+  const sx = originX + px * escalaM2px;
+  const sy = originY - py * escalaM2px;
+
+  noStroke(); fill(0,229,255,30);
+  ellipse(sx, originY - y0ini*escalaM2px, 20, 5);
+
+  drawingContext.shadowColor = '#00e5ff';
+  drawingContext.shadowBlur  = 20;
+  fill(0, 229, 255); ellipse(sx, sy, 14, 14);
+  drawingContext.shadowBlur = 0;
+  fill(255); ellipse(sx, sy, 5, 5);
+}
+
+function dibujarVectores() {
+  const sx = originX + px * escalaM2px;
+  const sy = originY - py * escalaM2px;
+  const vy_cur = vy0 - g * tiempo;
+  const scale = 4;
+  drawArrow(sx, sy, sx + vx0*scale, sy,              '#ffd166', 'Vx');
+  drawArrow(sx, sy, sx,             sy - vy_cur*scale,'#ff3c6e', 'Vy');
+}
+
+function drawArrow(x1, y1, x2, y2, col, label) {
+  if (dist(x1,y1,x2,y2) < 2) return;
+  const hl = 8, angle = Math.atan2(y2-y1, x2-x1);
+  stroke(col); strokeWeight(2); fill(col);
+  drawingContext.shadowColor = col; drawingContext.shadowBlur = 5;
+  line(x1, y1, x2, y2);
+  drawingContext.shadowBlur = 0;
+  push(); translate(x2,y2); rotate(angle); noStroke();
+  beginShape(); vertex(0,0); vertex(-hl,-hl/2); vertex(-hl,hl/2); endShape(CLOSE);
+  translate(5,0); rotate(-angle); fill(255); noStroke(); textSize(9);
+  text(label,0,4);
+  pop();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FÍSICA
+// ═══════════════════════════════════════════════════════════
+function actualizarFisica() {
+  const dt = deltaTime / 1000;
+  tiempo += dt;
+
+  px = vx0 * tiempo;
+  py = y0ini + vy0*tiempo - 0.5*g*tiempo*tiempo;
+
+  if (py <= 0 && tiempo > 0.05) {
+    py = 0; landado = true;
+  }
+
+  trayectoria.push({ x: px, y: py });
+  if (trayectoria.length > 400) trayectoria.shift();
+
+  const vyNow = vy0 - g * tiempo;
+  const vMod  = Math.sqrt(vx0*vx0 + vyNow*vyNow);
+
+  datosCSV.push({ t: tiempo, x: px, y: py, vx: vx0, vy: vyNow, v: vMod });
+
+  if (frameCount % 2 === 0) actualizarGraficas(tiempo, px, py, vx0, vyNow);
+
+  if (pausa) mostrarStepEq();
+}
+
+function mostrarDatos() {
+  const vyCur = vy0 - g*tiempo;
+  document.getElementById('dTiempo').textContent = tiempo.toFixed(2)+' s';
+  document.getElementById('dX').textContent      = px.toFixed(2)+' m';
+  document.getElementById('dY').textContent      = py.toFixed(2)+' m';
+  document.getElementById('dVx').textContent     = vx0.toFixed(2)+' m/s';
+  document.getElementById('dVy').textContent     = vyCur.toFixed(2)+' m/s';
+  document.getElementById('dV').textContent      = Math.sqrt(vx0*vx0+vyCur*vyCur).toFixed(2)+' m/s';
+}
+
+function mostrarStepEq() {
+  const t = tiempo.toFixed(2);
+  const xc = (vx0*tiempo).toFixed(2);
+  const yc = (y0ini + vy0*tiempo - 0.5*g*tiempo*tiempo).toFixed(2);
+  const eq = `x(${t}) = ${vx0.toFixed(2)}×${t} = ${xc} m\ny(${t}) = ${y0ini.toFixed(1)} + ${vy0.toFixed(2)}×${t} − ½×${g}×${(tiempo*tiempo).toFixed(2)} = ${yc} m`;
+  const box = document.getElementById('stepBox');
+  box.classList.add('visible');
+  document.getElementById('stepEq').textContent = eq;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONTROLES
+// ═══════════════════════════════════════════════════════════
+function togglePause() {
+  pausa = !pausa;
+  const btn = document.getElementById('btnPausa');
+  btn.textContent = pausa ? '▶ Reanudar' : '⏸ Pausa';
+  if (!pausa) document.getElementById('stepBox').classList.remove('visible');
+}
+
+function stepSim() {
+  if (!pausa) { pausa = true; document.getElementById('btnPausa').textContent = '▶ Reanudar'; }
+  stepPending = true;
+  mostrarStepEq();
+}
+
+function resetSim() {
+  tiempo = 0; px = 0; py = y0ini; landado = false;
+  pausa  = false;
+  document.getElementById('btnPausa').textContent = '⏸ Pausa';
+  document.getElementById('stepBox').classList.remove('visible');
+  trayectoria = [{ x:0, y:y0ini }];
+  datosCSV    = [];
+  if (chartX) {
+    [chartX, chartY, chartV].forEach(c => { c.data.labels=[]; c.data.datasets.forEach(d=>d.data=[]); c.update('none'); });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GRÁFICAS
+// ═══════════════════════════════════════════════════════════
+function makeGrad(ctx, color) {
+  const { chart } = ctx;
+  const { ctx: c, chartArea: ca } = chart;
+  if (!ca) return 'transparent';
+  const [r,gg,b] = color;
+  const gr = c.createLinearGradient(0,ca.top,0,ca.bottom);
+  gr.addColorStop(0,   `rgba(${r},${gg},${b},0.25)`);
+  gr.addColorStop(0.7, `rgba(${r},${gg},${b},0.04)`);
+  gr.addColorStop(1,   `rgba(${r},${gg},${b},0)`);
+  return gr;
+}
+
+const baseOpts = (yLabel) => ({
+  responsive:true, maintainAspectRatio:false, animation:false,
+  interaction:{ mode:'index', intersect:false },
+  plugins:{
+    legend:{ labels:{ color:'rgba(255,255,255,0.4)', font:{size:10,family:"'Space Mono',monospace"}, boxWidth:14, boxHeight:2, usePointStyle:true, pointStyle:'line' }, position:'top' },
+    tooltip:{ backgroundColor:'rgba(5,7,15,0.96)', titleColor:'rgba(255,255,255,0.9)', bodyColor:'rgba(255,255,255,0.65)', borderColor:'rgba(0,229,255,0.2)', borderWidth:1, padding:{x:12,y:8}, cornerRadius:8, callbacks:{ title:i=>`t = ${i[0].label} s` } },
+    zoom:{ zoom:{ wheel:{enabled:true,speed:0.08}, pinch:{enabled:true}, mode:'xy' }, pan:{enabled:true,mode:'xy'} }
+  },
+  scales:{
+    x:{ title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}}, ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0}, grid:{color:'rgba(255,255,255,0.02)'}, border:{color:'rgba(255,255,255,0.04)'} },
+    y:{ title:{display:true,text:yLabel,color:'rgba(255,255,255,0.25)',font:{size:9}}, ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:6}, grid:{color:'rgba(255,255,255,0.02)'}, border:{color:'rgba(255,255,255,0.04)'} }
+  }
+});
+
+function iniciarGraficas() {
+  chartX = new Chart(document.getElementById('chartX'), {
+    type:'line',
+    data:{ labels:[], datasets:[{ label:'x (m)', data:[], borderColor:'rgb(0,229,255)', backgroundColor: ctx=>makeGrad(ctx,[0,229,255]), fill:true, tension:0.4, pointRadius:0, borderWidth:2.5 }]},
+    options: baseOpts('x (m)')
+  });
+  chartY = new Chart(document.getElementById('chartY'), {
+    type:'line',
+    data:{ labels:[], datasets:[{ label:'y (m)', data:[], borderColor:'rgb(255,60,110)', backgroundColor: ctx=>makeGrad(ctx,[255,60,110]), fill:true, tension:0.4, pointRadius:0, borderWidth:2.5 }]},
+    options: baseOpts('y (m)')
+  });
+  chartV = new Chart(document.getElementById('chartV'), {
+    type:'line',
+    data:{ labels:[], datasets:[
+      { label:'Vx (m/s)', data:[], borderColor:'rgb(255,209,102)', fill:false, tension:0.4, pointRadius:0, borderWidth:2 },
+      { label:'Vy (m/s)', data:[], borderColor:'rgb(255,60,110)',  fill:false, tension:0.4, pointRadius:0, borderWidth:2 },
+    ]},
+    options: baseOpts('Velocidad (m/s)')
+  });
+}
+
+function actualizarGraficas(t, x, y, vx, vy) {
+  const lbl = t.toFixed(2);
+  const MAX = 120;
+  const push = (c, ...vals) => {
+    c.data.labels.push(lbl);
+    vals.forEach((v,i) => c.data.datasets[i].data.push(+v.toFixed(3)));
+    if (c.data.labels.length > MAX) { c.data.labels.shift(); c.data.datasets.forEach(d=>d.data.shift()); }
+    c.update('none');
+  };
+  push(chartX, x);
+  push(chartY, y);
+  push(chartV, vx, vy);
+  document.getElementById('badgeX').textContent = x.toFixed(2)+' m';
+  document.getElementById('badgeY').textContent = y.toFixed(2)+' m';
+  document.getElementById('badgeV').textContent = Math.sqrt(vx*vx+vy*vy).toFixed(2)+' m/s';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EXPORT CSV
+// ═══════════════════════════════════════════════════════════
+function exportCSV() {
+  if (!datosCSV.length) { alert('Sin datos. Lanza la simulación primero.'); return; }
+  const header = 't,x,y,Vx,Vy,V';
+  const rows   = datosCSV.map(d=>`${d.t.toFixed(3)},${d.x.toFixed(3)},${d.y.toFixed(3)},${d.vx.toFixed(3)},${d.vy.toFixed(3)},${d.v.toFixed(3)}`);
+  const blob   = new Blob([header+'\n'+rows.join('\n')], {type:'text/csv'});
+  const a      = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:'tiro_parabolico.csv' });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function shareURL() {
+  updateURLParams();
+  navigator.clipboard.writeText(location.href).then(()=>alert('¡URL copiada al portapapeles!')).catch(()=>alert(location.href));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VERIFICACIÓN
+// ═══════════════════════════════════════════════════════════
+let preguntaActual = null;
+
+function generarPregunta() {
+  if (typeof alcance === 'undefined') return;
+  const tipos = ['alcance', 'hmax', 'tvuelo'];
+  const tipo  = tipos[Math.floor(Math.random()*tipos.length)];
+  let texto, respuesta;
+
+  const v0f  = v0.toFixed(1), af = angDeg, y0f = y0ini.toFixed(1);
+  if (tipo === 'alcance') {
+    texto     = `Con v₀ = ${v0f} m/s, θ = ${af}° y y₀ = ${y0f} m, ¿cuál es el alcance horizontal del proyectil (m)?`;
+    respuesta = alcance;
+  } else if (tipo === 'hmax') {
+    texto     = `Con v₀ = ${v0f} m/s y θ = ${af}°, ¿cuál es la altura máxima alcanzada (m)?`;
+    respuesta = hMax;
+  } else {
+    texto     = `Con v₀ = ${v0f} m/s, θ = ${af}° y y₀ = ${y0f} m, ¿cuánto dura el vuelo (s)?`;
+    respuesta = tVuelo;
+  }
+
+  preguntaActual = { respuesta };
+  document.getElementById('preguntaText').textContent = texto;
+  document.getElementById('feedbackBox').className    = 'feedback-box';
+  document.getElementById('respuestaInput').value     = '';
+}
+
+function verificar() {
+  if (!preguntaActual) return;
+  const usr = parseFloat(document.getElementById('respuestaInput').value);
+  if (isNaN(usr)) { alert('Ingresa un número.'); return; }
+  const tol = Math.abs(preguntaActual.respuesta) * 0.02 + 0.05;
+  const fb  = document.getElementById('feedbackBox');
+  if (Math.abs(usr - preguntaActual.respuesta) <= tol) {
+    fb.className = 'feedback-box correct';
+    fb.textContent = `✓ ¡Correcto! Respuesta: ${preguntaActual.respuesta.toFixed(3)}`;
+  } else {
+    fb.className = 'feedback-box wrong';
+    fb.textContent = `✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(3)}`;
+  }
+}
+</script>
+</body>
+</html>
