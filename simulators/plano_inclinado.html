@@ -6,6 +6,8 @@
 <title>Plano Inclinado — Simulador de Física</title>
 <meta name="description" content="Simulador de plano inclinado: ángulo ajustable, vectores de peso, normal, fricción y fuerza neta en tiempo real.">
 <link rel="stylesheet" href="../core/sim-shared.css">
+<link rel="stylesheet" href="../core/chatbot.css">
+<script src="../core/env.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -479,10 +481,30 @@ function verificar(){
     fb.className='feedback-box correct';
     fb.textContent=`✓ ¡Correcto! Respuesta: ${preguntaActual.respuesta.toFixed(3)}`;
   } else {
-    fb.className='feedback-box wrong';
-    fb.textContent=`✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(3)}`;
+    fb.className = 'feedback-box wrong';
+    fb.textContent = `✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(3)}`;
   }
 }
+</script>
+<script src="../core/chatbot.js"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Plano Inclinado',
+    topic: 'inclined_plane',
+    getState: () => ({
+      tiempo,
+      masa,
+      anguloPlano: angDeg,
+      mu: conFriccion ? mu : 0,
+      normal: normalVal,
+      pesoParalelo: fParalelasVal,
+      pesoPerpendicular: normalVal,
+      friccion: fFricVal,
+      aceleracion: anetaVal,
+      velocidad,
+      posicion
+    })
+  });
 </script>
 </body>
 </html>

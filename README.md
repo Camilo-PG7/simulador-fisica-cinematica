@@ -53,6 +53,47 @@ npx http-server . -p 8080
 
 ---
 
+## 🤖 Chatbot Educativo con IA y Motor de Física Local
+
+El simulador incorpora un **Asistente de Física Inteligente** integrado (widget flotante 💬 en la esquina inferior derecha) disponible en todos los simuladores. 
+
+Este asistente analiza el estado físico de tu simulación en tiempo real (masa, aceleración, velocidad, ángulos, coeficientes de fricción) y responde tus dudas de forma didáctica.
+
+### 🌐 Funcionamiento Dual: Online & Offline
+
+1. **Modo Online (AI Studio):** Utiliza la API de **Google Gemini 2.0 Flash** para dar explicaciones dinámicas y responder dudas generales.
+2. **Modo Respaldo Local (Offline Fallback):** Si la API no está configurada, no tienes internet, o la cuota está agotada (**error 429**), el chatbot conmuta automáticamente al **Motor de Física Local**. Te dará explicaciones detalladas y cálculos numéricos exactos de las ecuaciones basados en el estado actual de tu simulación.
+
+---
+
+### 🔑 Configuración del API Key de Gemini
+
+Para habilitar el chatbot en su modo completo de Inteligencia Artificial (Online):
+1. Obtén una clave de API gratuita en [Google AI Studio](https://aistudio.google.com/apikey).
+2. Abre el archivo `core/env.js` en tu editor:
+   ```javascript
+   const GEMINI_API_KEY = 'TU_API_KEY_AQUI';
+   ```
+3. Guarda el archivo. *(Nota: El archivo `core/env.js` ya está configurado en `.gitignore` para que tu clave nunca se publique en repositorios públicos)*.
+
+---
+
+### 🛠️ Solución de Errores de Cuota Agotada (Error 429 / limit: 0)
+
+Si el chatbot muestra el indicador `💡 Asistente Local` y la consola muestra un error `429 (RESOURCE_EXHAUSTED - Limit: 0)`, significa que Google AI Studio ha restringido la cuota de tu clave de API a cero. Sigue estos pasos para solucionarlo:
+
+* **Paso A — Usar una Cuenta de Google Alternativa:** 
+  Google restringe la cuota en ciertas cuentas debido al país de registro o historial del proyecto de Google Cloud. La solución más rápida es abrir [aistudio.google.com](https://aistudio.google.com) usando otra cuenta de Google (cuenta personal antigua, o institucional) y crear una nueva clave.
+* **Paso B — Habilitar la Facturación (Pay-as-you-go):**
+  Si estás usando la consola de Google Cloud, asocia un método de pago a tu proyecto. Esto desbloquea cuotas de pago inmediatas. Para uso de desarrollo y académico, las tarifas de Gemini 2.0 Flash son de millonésimas de centavo por petición (gastarás menos de un centavo por cientos de preguntas).
+* **Paso C — Desactivar VPN:**
+  Google restringe el acceso al plan gratuito si detecta conexiones desde regiones no soportadas o IPs de VPNs compartidas comerciales. Apaga tu VPN y vuelve a intentar.
+
+---
+
+
+---
+
 ## 📁 Estructura del proyecto
 
 ```

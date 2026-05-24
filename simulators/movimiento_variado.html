@@ -13,6 +13,8 @@ window.MathJax = {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../core/chatbot.css">
+<script src="../core/env.js"></script>
 <style>
 :root{
   --bg:#07090f;--s0:#0d1120;--s1:#111827;--s2:#171f30;--s3:#0a0d18;
@@ -969,5 +971,27 @@ window.verificarMV=function(){
     <div class="mv-feedback" id="pregMV_fb"></div>
   </div>
 </div>
+<script src="../core/chatbot.js"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Movimiento Variado (Cálculo Simbólico)',
+    topic: 'varied_motion',
+    getState: () => {
+      const tValStr = document.getElementById('eT') ? document.getElementById('eT').value.trim() : '';
+      const tVal = tValStr ? parseFloat(tValStr) : 0;
+      const state = { tiempo: tVal };
+      if (typeof comp !== 'undefined' && comp.pos) {
+        try {
+          state.posicion = parseFloat(comp.pos.evaluate({ t: tVal }).text());
+          state.velocidad = parseFloat(comp.vel.evaluate({ t: tVal }).text());
+          state.aceleracion = parseFloat(comp.acc.evaluate({ t: tVal }).text());
+        } catch (e) {
+          // ignore evaluation errors
+        }
+      }
+      return state;
+    }
+  });
+</script>
 </body>
 </html>

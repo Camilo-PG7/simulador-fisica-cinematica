@@ -6,6 +6,8 @@
 <title>Caja sobre Vehículo — Simulador de Física</title>
 <meta name="description" content="Simulador de caja sobre vehículo: condición de deslizamiento por fricción estática, animación del camión y la caja.">
 <link rel="stylesheet" href="../core/sim-shared.css">
+<link rel="stylesheet" href="../core/chatbot.css">
+<script src="../core/env.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -257,22 +259,109 @@ function actualizarFisica(){
   const dt=Math.min(deltaTime,50)/1000;
   tiempo+=dt;
 
-  const fFricMax =mus*mc*G;
-  const fRequired=mc*Math.abs(aTruck);
-  slidingNow = fRequired > fFricMax;
+  const fFricMax = mus * G; // Aceleración de fricción estática máxima
+  const limVal = 1.8125;    // Límite físico en metros de la plataforma (72.5px / 40px/m)
 
-  velCamion+=aTruck*dt;
-  posCamion+=velCamion*dt;
+  let velCamion_new = velCamion + aTruck * dt;
+  let posCamion_new = posCamion + (velCamion + velCamion_new) * 0.5 * dt;
 
+  let velCaja_new, posCaja_new;
   let aCaja;
-  if(!slidingNow){
-    aCaja=aTruck;
+
+  if (!slidingNow) {
+    // Fricción Estática: evaluamos si la aceleración supera el umbral estático
+    if (Math.abs(aTruck) > fFricMax) {
+      slidingNow = true;
+      aCaja = muc * G * Math.sign(aTruck);
+      velCaja_new = velCaja + aCaja * dt;
+      posCaja_new = posCaja + (velCaja + velCaja_new) * 0.5 * dt;
+    } else {
+      // Totalmente acoplado al camión
+      aCaja = aTruck;
+      velCaja_new = velCamion_new;
+      posCaja_new = posCamion_new + (posCaja - posCamion);
+    }
   } else {
-    const signDelta=Math.sign(velCamion-velCaja)||Math.sign(aTruck);
-    aCaja=(muc*G)*signDelta;
+    // Fricción Dinámica (deslizamiento)
+    let signDelta = Math.sign(velCamion - velCaja) || Math.sign(aTruck) || 1;
+    aCaja = muc * G * signDelta;
+
+    // Detectar si la velocidad relativa cruza por cero en este intervalo de tiempo (dt)
+    const v_rel_init = velCamion - velCaja;
+    const a_rel = aTruck - aCaja;
+    
+    let crossed = false;
+    let t_match = 0;
+    if (Math.abs(a_rel) > 1e-6) {
+      t_match = v_rel_init / a_rel; // tiempo exacto de coincidencia de velocidad
+      if (t_match > 0 && t_match < dt) {
+        crossed = true;
+      }
+    }
+
+    if (crossed) {
+      // Avanzar hasta el punto de coincidencia de velocidades
+      const velCamion_match = velCamion + aTruck * t_match;
+      const posCamion_match = posCamion + (velCamion + velCamion_match) * 0.5 * t_match;
+      const velCaja_match = velCaja + aCaja * t_match;
+      const posCaja_match = posCaja + (velCaja + velCaja_match) * 0.5 * t_match;
+
+      const dt_rem = dt - t_match;
+
+      // Re-evaluar si pasa a fricción estática o continúa deslizando
+      if (Math.abs(aTruck) <= fFricMax) {
+        slidingNow = false;
+        aCaja = aTruck;
+        velCamion_new = velCamion_match + aTruck * dt_rem;
+        posCamion_new = posCamion_match + (velCamion_match + velCamion_new) * 0.5 * dt_rem;
+        velCaja_new = velCamion_new;
+        posCaja_new = posCamion_new + (posCaja_match - posCamion_match);
+      } else {
+        // Sigue deslizando pero con sentido opuesto de la fricción cinética
+        let signDelta_rem = Math.sign(aTruck) || 1;
+        const aCaja_rem = muc * G * signDelta_rem;
+        velCamion_new = velCamion_match + aTruck * dt_rem;
+        posCamion_new = posCamion_match + (velCamion_match + velCamion_new) * 0.5 * dt_rem;
+        velCaja_new = velCaja_match + aCaja_rem * dt_rem;
+        posCaja_new = posCaja_match + (velCaja_match + velCaja_new) * 0.5 * dt_rem;
+        aCaja = aCaja_rem;
+      }
+    } else {
+      // Deslizamiento normal
+      velCaja_new = velCaja + aCaja * dt;
+      posCaja_new = posCaja + (velCaja + velCaja_new) * 0.5 * dt;
+    }
   }
-  velCaja+=aCaja*dt;
-  posCaja+=velCaja*dt;
+
+  // Aplicar límites físicos (para evitar desfases visuales o flotaciones)
+  let x_rel = posCaja_new - posCamion_new;
+  if (x_rel > limVal) {
+    posCaja_new = posCamion_new + limVal;
+    velCaja_new = velCamion_new;
+    // Si la inercia lo empuja contra la cabina, desliza de vuelta solo si la aceleración cambia
+    if (aTruck < -fFricMax) {
+      slidingNow = true;
+    } else {
+      slidingNow = false;
+      aCaja = aTruck;
+    }
+  } else if (x_rel < -limVal) {
+    posCaja_new = posCamion_new - limVal;
+    velCaja_new = velCamion_new;
+    // Si la inercia lo empuja al extremo trasero, desliza de vuelta si la aceleración cambia
+    if (aTruck > fFricMax) {
+      slidingNow = true;
+    } else {
+      slidingNow = false;
+      aCaja = aTruck;
+    }
+  }
+
+  // Guardar estados actualizados
+  velCamion = velCamion_new;
+  posCamion = posCamion_new;
+  velCaja = velCaja_new;
+  posCaja = posCaja_new;
 
   const deltaV=velCamion-velCaja;
 
@@ -317,10 +406,11 @@ function dibujarEscena(){
 
   stroke(255,255,255,20); strokeWeight(1);
   const offset=(posCamion*pxPerM)%60;
-  for(let x=-60+offset;x<width+60;x+=60) line(x,groundY,x-15,groundY+12);
+  for(let x=-60-offset;x<width+60;x+=60) line(x,groundY,x-15,groundY+12);
 
   const truckW=200, truckH=70, cabinaH=55, cabinaW=70;
-  const truckX=width*0.3 - (posCamion-posCaja)*pxPerM*0.5;
+  // Camera follows the truck — truckX is fixed on screen
+  const truckX=width*0.3;
   const truckY=groundY-truckH;
 
   noStroke(); fill(0,0,0,60);
@@ -521,6 +611,25 @@ function verificar(){
     fb.textContent=`✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(3)}`;
   }
 }
+</script>
+<script src="../core/chatbot.js"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Caja sobre Vehículo',
+    topic: 'friction_vehicle',
+    getState: () => ({
+      tiempo,
+      masaCaja: mc,
+      muEstatico: mus,
+      muCinetico: muc,
+      aceleracionCamion: aTruck,
+      velocidadCamion: velCamion,
+      velocidadCaja: velCaja,
+      posicionCamion: posCamion,
+      posicionCaja: posCaja,
+      deslizando: slidingNow
+    })
+  });
 </script>
 </body>
 </html>

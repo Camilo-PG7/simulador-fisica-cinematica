@@ -6,6 +6,8 @@
 <title>Máquina de Atwood — Simulador de Física</title>
 <meta name="description" content="Simulador de la máquina de Atwood: dos masas en polea, aceleración y tensión calculadas analíticamente, animación del movimiento.">
 <link rel="stylesheet" href="../core/sim-shared.css">
+<link rel="stylesheet" href="../core/chatbot.css">
+<script src="../core/env.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -434,10 +436,27 @@ function verificar(){
     fb.className='feedback-box correct';
     fb.textContent=`✓ ¡Correcto! Respuesta: ${preguntaActual.respuesta.toFixed(4)}`;
   } else {
-    fb.className='feedback-box wrong';
-    fb.textContent=`✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(4)}`;
+    fb.className = 'feedback-box wrong';
+    fb.textContent = `✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(4)}`;
   }
 }
+</script>
+<script src="../core/chatbot.js"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Máquina de Atwood',
+    topic: 'atwood',
+    getState: () => ({
+      tiempo,
+      m1,
+      m2,
+      aceleracion: acel,
+      tension,
+      velocidad: vel,
+      posicion1: pos1,
+      posicion2: pos2
+    })
+  });
 </script>
 </body>
 </html>

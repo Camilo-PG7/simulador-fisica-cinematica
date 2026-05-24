@@ -6,6 +6,8 @@
 <title>Tiro Parabólico — Simulador de Física</title>
 <meta name="description" content="Simulador de tiro parabólico: velocidad inicial, ángulo, trayectoria animada, alcance, altura máxima, gráficas x(t) y y(t).">
 <link rel="stylesheet" href="../core/sim-shared.css">
+<link rel="stylesheet" href="../core/chatbot.css">
+<script src="../core/env.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -279,13 +281,14 @@ function draw() {
 }
 
 function calcEscala() {
-  const margenX = 60, margenY = 50;
+  // originX = 230 keeps content clear of the fixed left panel (~220 px)
+  const margenX = 230, margenY = 50;
   const maxX = Math.max(alcance, 10);
   const maxY = Math.max(hMax + y0ini + 5, 10);
-  const scX  = (width  - margenX * 2) / maxX;
+  const scX  = (width  - margenX - 30) / maxX;
   const scY  = (height - margenY * 2) / maxY;
-  escalaM2px = Math.min(scX, scY, 14);
-  originX = 60;
+  escalaM2px = Math.max(0.1, Math.min(scX, scY, 14));
+  originX = 230;
   originY = height - 40;
 }
 
@@ -578,6 +581,26 @@ function verificar() {
     fb.textContent = `✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(3)}`;
   }
 }
+</script>
+<script src="../core/chatbot.js"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Tiro Parabólico',
+    topic: 'projectile',
+    getState: () => ({
+      tiempo,
+      v0,
+      angulo: angDeg,
+      alturaInicial: y0ini,
+      x: px,
+      y: py,
+      vx: vx0,
+      vy: vy0 - 9.81 * tiempo,
+      alcance,
+      hmax: hMax,
+      tVuelo
+    })
+  });
 </script>
 </body>
 </html>

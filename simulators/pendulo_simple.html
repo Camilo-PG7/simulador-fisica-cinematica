@@ -6,6 +6,8 @@
 <title>Péndulo Simple — Simulador de Física</title>
 <meta name="description" content="Simulador de péndulo simple: longitud y ángulo ajustables, periodo teórico vs simulado, gráfica θ(t) con integración RK4.">
 <link rel="stylesheet" href="../core/sim-shared.css">
+<link rel="stylesheet" href="../core/chatbot.css">
+<script src="../core/env.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
@@ -481,6 +483,21 @@ function verificar(){
     fb.textContent=`✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(4)}`;
   }
 }
+</script>
+<script src="../core/chatbot.js"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Péndulo Simple',
+    topic: 'pendulum',
+    getState: () => ({
+      tiempo,
+      longitud: L,
+      anguloInicial: theta0Deg,
+      angulo_actual: theta * 180 / Math.PI,
+      velocidadAngular: omega,
+      periodo: perTeoricoVal
+    })
+  });
 </script>
 </body>
 </html>
