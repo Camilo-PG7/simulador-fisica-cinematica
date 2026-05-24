@@ -491,3 +491,91 @@
   50% { border-color: rgba(255, 171, 0, 0.5); }
 }
 
+/* ── Premium Markdown Headers ── */
+.chatbot-msg h1,
+.chatbot-msg h2,
+.chatbot-msg h3 {
+  font-family: 'Syne', sans-serif;
+  color: #00e5ff;
+  margin-top: 14px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.chatbot-msg h1 { font-size: 0.95rem; border-bottom: 1px solid rgba(0, 229, 255, 0.15); padding-bottom: 4px; }
+.chatbot-msg h2 { font-size: 0.88rem; }
+.chatbot-msg h3 { font-size: 0.8rem; }
+
+/* ── Premium Tables with Glassmorphism and Neon accents ── */
+.chatbot-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin: 12px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(13, 17, 32, 0.6);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Touch scroll momentum */
+.chatbot-table-container::-webkit-scrollbar {
+  height: 4px;
+}
+.chatbot-table-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.3);
+  border-radius: 4px;
+}
+
+.chatbot-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.64rem;
+  text-align: left;
+  color: #e8ecf8;
+}
+
+.chatbot-table th {
+  background: linear-gradient(180deg, rgba(0, 229, 255, 0.08) 0%, rgba(0, 229, 255, 0.03) 100%);
+  color: #00e5ff;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-bottom: 1.5px solid rgba(0, 229, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chatbot-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s;
+}
+
+.chatbot-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.chatbot-table tbody tr:hover td {
+  background: rgba(0, 229, 255, 0.03);
+}
+
+/* ── KaTeX Display Adjustments ── */
+.katex-display {
+  margin: 10px 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 0;
+}
+
+.katex {
+  font-size: 0.82rem !important;
+  color: #e8ecf8;
+}
+
+.katex-display .katex {
+  font-size: 0.9rem !important;
+  color: #00e5ff;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+}
+

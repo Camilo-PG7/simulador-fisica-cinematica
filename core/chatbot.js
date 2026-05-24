@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ═══════════════════════════════════════════════════════════
  *  CHATBOT EDUCATIVO DE FÍSICA
  *  Módulo compartido para todos los simuladores
@@ -374,18 +374,18 @@ REGLAS DE COMPORTAMIENTO:
 1. Responde SIEMPRE en español.
 2. Sé didáctico, claro y preciso. Usa analogías cuando ayuden.
 3. Cuando el estudiante pregunte sobre lo que ocurre en la simulación, usa los datos de estado que se te proporcionan para dar respuestas numéricas específicas.
-4. Incluye las ecuaciones relevantes usando notación matemática simple (no LaTeX complejo). Ejemplo: v(t) = v₀ + a·t
+4. Incluye las ecuaciones relevantes usando notación matemática LaTeX en formato estándar, utilizando $$ para ecuaciones en bloque y $ para ecuaciones en línea. Por ejemplo: $$x(t) = x_0 + v_0 t + \\frac{1}{2} a t^2$$ o $F = m \\cdot a$. Asegúrate de que las ecuaciones sean correctas y estén bien formateadas.
 5. Si el estudiante comete un error conceptual, corrígelo amablemente con la explicación correcta.
 6. Respuestas concisas pero completas (máximo 200 palabras a menos que se pida una explicación extendida).
-7. Usa negritas (**texto**) para conceptos clave y cursivas (*texto*) para variables.
+7. Usa negritas (**texto**) para conceptos clave y cursivas (*texto*) o notación matemática para variables.
 8. Si mencionas valores numéricos del estado actual, indícalo claramente como "según la simulación actual".
 
 MARCO TEÓRICO — CINEMÁTICA Y DINÁMICA:
 
 ## Movimiento Rectilíneo Uniforme (MRU)
-- Velocidad constante, aceleración = 0
-- x(t) = x₀ + v·t
-- La gráfica x vs t es una recta; v vs t es una línea horizontal
+- Velocidad constante, aceleración $a = 0$
+- Posición: $x(t) = x_0 + v \\cdot t$
+- La gráfica $x$ vs $t$ es una recta; $v$ vs $t$ es una línea horizontal
 
 ## Movimiento Uniformemente Acelerado (MUA)
 - Aceleración constante a ≠ 0
@@ -653,37 +653,37 @@ Responde basándote en este contexto cuando sea relevante.`;
       return `¡De nada! 😊 Estoy aquí para ayudarte con la física. Si tienes más dudas sobre conceptos, ecuaciones o los datos de la simulación, ¡pregunta cuando quieras!`;
 
     if (h('gravedad', 'g =', 'caida libre', 'aceleracion gravitacional', 'fuerza gravitacional', '9.8', '9.81'))
-      return `### La Gravedad (g)\nLa **aceleración gravitacional** en la superficie de la Tierra es:\n*g = 9.8 m/s²* (con mayor precisión: 9.80665 m/s²)\n\nTodo objeto en caída libre (sin fricción del aire) cae con esta misma aceleración, independientemente de su masa — principio de Galileo.\n\n**En las simulaciones:**\n- Peso: *W = m · g*\n- Normal (plano horizontal): *N = m · g*\n- Fricción: *f = μ · m · g*\n- Aceleración Atwood: *a = (m₁−m₂)·g / (m₁+m₂)*`;
+      return `### La Gravedad ($g$)\nLa **aceleración gravitacional** en la superficie de la Tierra es:\n$g = 9.8 \\text{ m/s}^2$ (con mayor precisión: $9.80665 \\text{ m/s}^2$)\n\nTodo objeto en caída libre (sin fricción del aire) cae con esta misma aceleración, independientemente de su masa — principio de Galileo.\n\n**En las simulaciones:**\n- Peso: $W = m \\cdot g$\n- Normal (plano horizontal): $N = m \\cdot g$\n- Fricción: $f = \\mu \\cdot m \\cdot g$\n- Aceleración Atwood: $$a = \\frac{m_1 - m_2}{m_1 + m_2} g$$`;
 
     if (h('primera ley', 'ley de inercia', 'inercia'))
-      return `### Primera Ley de Newton — Ley de Inercia\n**"Todo cuerpo permanece en reposo o en movimiento rectilíneo uniforme a menos que una fuerza neta externa actúe sobre él."**\n\n- *F_neta = 0* → el objeto no cambia su estado de movimiento\n- Un objeto en reposo **permanece en reposo**\n- Un objeto en movimiento **sigue a velocidad constante en línea recta**\n\nLa **inercia** es la tendencia de los objetos a resistir cambios en su movimiento. A mayor masa → mayor inercia.`;
+      return `### Primera Ley de Newton — Ley de Inercia\n**"Todo cuerpo permanece en reposo o en movimiento rectilíneo uniforme a menos que una fuerza neta externa actúe sobre él."**\n\n- $F_{\\text{neta}} = 0$ → el objeto no cambia su estado de movimiento\n- Un objeto en reposo **permanece en reposo**\n- Un objeto en movimiento **sigue a velocidad constante en línea recta**\n\nLa **inercia** es la tendencia de los objetos a resistir cambios en su movimiento. A mayor masa → mayor inercia.`;
 
     if (h('segunda ley', 'f=ma', 'f = m', 'fuerza igual a masa'))
-      return `### Segunda Ley de Newton — F = m · a\n**"La aceleración de un objeto es directamente proporcional a la fuerza neta e inversamente proporcional a su masa."**\n\n*F_neta = m · a*\n\n- *F_neta* → Newtons (N)\n- *m* → kilogramos (kg)\n- *a* → m/s²\n\nEsta es la ecuación central de toda la mecánica clásica — la base de todos los cálculos de esta simulación.`;
+      return `### Segunda Ley de Newton — $F = m \\cdot a$\n**"La aceleración de un objeto es directamente proporcional a la fuerza neta e inversamente proporcional a su masa."**\n\n$$F_{\\text{neta}} = m \\cdot a$$\n\n- $F_{\\text{neta}}$ → Newtons ($\\text{N}$)\n- $m$ → kilogramos ($\\text{kg}$)\n- $a$ → $\\text{m/s}^2$\n\nEsta es la ecuación central de toda la mecánica clásica — la base de todos los cálculos de esta simulación.`;
 
     if (h('tercera ley', 'accion y reaccion', 'accion-reaccion', 'par de fuerzas'))
-      return `### Tercera Ley de Newton — Acción y Reacción\n**"Por cada acción existe una reacción igual en magnitud y opuesta en dirección."**\n\n*F_AB = −F_BA*\n\nEjemplos:\n- El peso de la caja actúa sobre el camión → el camión ejerce la Normal sobre la caja.\n- El cohete expulsa gases hacia abajo → el gas empuja el cohete hacia arriba.\n\nImportante: las fuerzas de acción-reacción actúan sobre **objetos diferentes**.`;
+      return `### Tercera Ley de Newton — Acción y Reacción\n**"Por cada acción existe una reacción igual en magnitud y opuesta en dirección."**\n\n$$\\vec{F}_{AB} = -\\vec{F}_{BA}$$\n\nEjemplos:\n- El peso de la caja actúa sobre el camión → el camión ejerce la Normal sobre la caja.\n- El cohete expulsa gases hacia abajo → el gas empuja el cohete hacia arriba.\n\nImportante: las fuerzas de acción-reacción actúan sobre **objetos diferentes**.`;
 
     if (h('newton', 'leyes de newton', 'leyes newton') && !h('primera', 'segunda', 'tercera', 'f=ma', 'inercia', 'accion'))
-      return `### Las Tres Leyes de Newton\n1. **Inercia:** Un cuerpo en reposo o movimiento uniforme permanece así si la fuerza neta es cero.\n2. **F = m·a:** La fuerza neta es igual a masa × aceleración.\n3. **Acción-Reacción:** Toda fuerza tiene una reacción igual y opuesta en el objeto que la recibe.\n\nEstas tres leyes son la base de toda la mecánica clásica y de todos los cálculos de esta simulación.`;
+      return `### Las Tres Leyes de Newton\n1. **Inercia:** Un cuerpo en reposo o movimiento uniforme permanece así si la fuerza neta es cero.\n2. **$F = m \\cdot a$:** La fuerza neta es igual a masa $\\times$ aceleración.\n3. **Acción-Reacción:** Toda fuerza tiene una reacción igual y opuesta en el objeto que la recibe.\n\nEstas tres leyes son la base de toda la mecánica clásica y de todos los cálculos de esta simulación.`;
 
     if (h('masa', 'diferencia masa peso', 'masa vs peso', 'que es la masa'))
-      return `### Masa vs Peso\n- **Masa (m):** Cantidad de materia. Constante en cualquier lugar. Se mide en kg.\n- **Peso (W):** Fuerza gravitacional. Varía según la gravedad.\n  *W = m · g*\n\n| Lugar | g (m/s²) | Peso de 10 kg |\n|---|---|---|\n| Tierra | 9.8 | 98 N |\n| Luna | 1.62 | 16.2 N |\n| Marte | 3.72 | 37.2 N |\n| Júpiter | 24.8 | 248 N |\n\nEn el espacio sin gravedad: masa = 10 kg pero peso = 0 N.`;
+      return `### Masa vs Peso\n- **Masa ($m$):** Cantidad de materia. Constante en cualquier lugar. Se mide en $\\text{kg}$.\n- **Peso ($W$):** Fuerza gravitacional. Varía según la gravedad.\n  $$W = m \\cdot g$$\n\n| Lugar | $g$ ($\\text{m/s}^2$) | Peso de $10 \\text{ kg}$ |\n|---|---|---|\n| Tierra | 9.8 | $98 \\text{ N}$ |\n| Luna | 1.62 | $16.2 \\text{ N}$ |\n| Marte | 3.72 | $37.2 \\text{ N}$ |\n| Júpiter | 24.8 | $248 \\text{ N}$ |\n\nEn el espacio sin gravedad: masa = $10 \\text{ kg}$ pero peso = $0 \\text{ N}$.`;
 
     if (h('energia cinetica', 'ec =', 'energia cin'))
-      return `### Energía Cinética (Ec)\n*Ec = ½ · m · v²*\n\nEs la energía debida al **movimiento**. Si la velocidad se duplica, la energía cinética se **cuadruplica** (relación cuadrática).\n\nUnidades: Joules (J) = kg·m²/s²\n\nEl Teorema Trabajo-Energía: *W_neto = ΔEc = ½·m·v_f² − ½·m·v_i²*`;
+      return `### Energía Cinética ($E_c$)\n$$E_c = \\frac{1}{2} m v^2$$\n\nEs la energía debida al **movimiento**. Si la velocidad se duplica, la energía cinética se **cuadruplica** (relación cuadrática).\n\nUnidades: Joules ($\\text{J} = \\text{kg} \\cdot \\text{m}^2/\\text{s}^2$)\n\nEl Teorema Trabajo-Energía: $$W_{\\text{neto}} = \\Delta E_c = \\frac{1}{2}m v_f^2 - \\frac{1}{2}m v_i^2$$`;
 
     if (h('energia potencial', 'ep =', 'energia pot'))
-      return `### Energía Potencial Gravitatoria (Ep)\n*Ep = m · g · h*\n\nEnergía almacenada por la posición en el campo gravitacional. Se convierte en cinética al caer.\n\nConservación (sin fricción): *½·m·v₁² + m·g·h₁ = ½·m·v₂² + m·g·h₂*`;
+      return `### Energía Potencial Gravitatoria ($E_p$)\n$$E_p = m \\cdot g \\cdot h$$\n\nEnergía almacenada por la posición en el campo gravitacional. Se convierte en cinética al caer.\n\nConservación (sin fricción): $$\\frac{1}{2}m v_1^2 + m g h_1 = \\frac{1}{2}m v_2^2 + m g h_2$$`;
 
     if (h('energia', 'trabajo', 'joule', 'conservacion energia') && !h('cinetica', 'potencial'))
-      return `### Energía y Trabajo\n- **Trabajo:** *W = F·d·cos(θ)* — Fuerza × distancia en la dirección de la fuerza. (J)\n- **Energía Cinética:** *Ec = ½·m·v²* — Energía del movimiento. (J)\n- **Energía Potencial:** *Ep = m·g·h* — Energía por posición. (J)\n- **Potencia:** *P = W/t = F·v* — Tasa de realización de trabajo. (W = J/s)\n\n**Conservación:** En sistemas sin fricción, la energía mecánica total (*Ec + Ep*) se conserva.`;
+      return `### Energía y Trabajo\n- **Trabajo:** $W = F \\cdot d \\cdot \\cos(\\theta)$ — Fuerza $\\times$ distancia en la dirección de la fuerza. ($\\text{J}$)\n- **Energía Cinética:** $E_c = \\frac{1}{2} m v^2$ — Energía del movimiento. ($\\text{J}$)\n- **Energía Potencial:** $E_p = m \\cdot g \\cdot h$ — Energía por posición. ($\\text{J}$)\n- **Potencia:** $P = \\frac{W}{t} = F \\cdot v$ — Tasa de realización de trabajo. ($\\text{W} = \\text{J/s}$)\n\n**Conservación:** En sistemas sin fricción, la energía mecánica total ($E_c + E_p$) se conserva.`;
 
     if (h('friccion', 'rozamiento', 'μ', 'mu ', 'coeficiente de fric') && !h('estatico', 'cinetico', 'kinetico', 'dinamica'))
-      return `### Fricción — Concepto General\nLa fricción se opone al movimiento relativo entre superficies en contacto.\n\n**Tipos:**\n- **Fricción Estática (μₑ):** Antes del movimiento. Variable entre 0 y *f_s_max = μₑ·N*.\n- **Fricción Cinética (μc):** Durante el movimiento. Constante: *f_k = μc·N*.\n\n**Regla fundamental:** *μₑ > μc siempre*\n\nEsto explica por qué cuesta más **empezar** a mover un objeto que **mantenerlo** en movimiento.`;
+      return `### Fricción — Concepto General\nLa fricción se opone al movimiento relativo entre superficies en contacto.\n\n**Tipos:**\n- **Fricción Estática ($\\mu_e$):** Antes del movimiento. Variable entre $0$ y $f_{s,\\text{max}} = \\mu_e N$.\n- **Fricción Cinética ($\\mu_c$):** Durante el movimiento. Constante: $f_k = \\mu_c N$.\n\n**Regla fundamental:** $\\mu_e > \\mu_c$ siempre.\n\nEsto explica por qué cuesta más **empezar** a mover un objeto que **mantenerlo** en movimiento.`;
 
     if (h('vectores', 'vector', 'componente', 'descomponer') && !h('velocidad', 'aceleracion', 'fuerza'))
-      return `### Vectores y Descomposición\nUn vector tiene: **módulo** (magnitud), **dirección** y **sentido**.\n\nPara un vector *A* con ángulo *θ* respecto al eje horizontal:\n- *Ax = A·cos(θ)* — Componente horizontal\n- *Ay = A·sin(θ)* — Componente vertical\n- *|A| = √(Ax² + Ay²)* — Módulo resultante\n- *θ = arctan(Ay/Ax)* — Ángulo de la resultante`;
+      return `### Vectores y Descomposición\nUn vector tiene: **módulo** (magnitud), **dirección** y **sentido**.\n\nPara un vector $\\vec{A}$ con ángulo $\\theta$ respecto al eje horizontal:\n- $A_x = A \\cos(\\theta)$ — Componente horizontal\n- $A_y = A \\sin(\\theta)$ — Componente vertical\n- $|\\vec{A}| = \\sqrt{A_x^2 + A_y^2}$ — Módulo resultante\n- $\\theta = \\arctan(A_y/A_x)$ — Ángulo de la resultante`;
 
     if (h('derivada', 'derivar', 'derivacion', 'tasa de cambio'))
       return `### Derivadas en Física\nLa derivada es la **tasa de cambio instantánea**:\n- *v(t) = dx/dt* — Velocidad = derivada de posición\n- *a(t) = dv/dt = d²x/dt²* — Aceleración = derivada de velocidad\n\nPara el M.U.A. (*x = x₀ + v₀t + ½at²*):\n- *v = dx/dt = v₀ + at*\n- *a = dv/dt = a* (constante)`;
@@ -722,22 +722,22 @@ Responde basándote en este contexto cuando sea relevante.`;
     const relVel = (vCamion - vCaja).toFixed(3);
 
     if (h('ecuacion', 'formula', 'matematica', 'expresion', 'ley fisica'))
-      return `### Ecuaciones del Sistema Caja–Camión\n**Normal:** *N = m·g = ${m}·9.8 = ${normal.toFixed(1)} N*\n**Fricción estática máx.:** *f_s_max = μₑ·N = ${muE}·${normal.toFixed(1)} = ${fStaticMax.toFixed(1)} N*\n**Fricción cinética:** *f_k = μc·N = ${muC}·${normal.toFixed(1)} = ${fKinetic.toFixed(1)} N*\n**Aceleración crítica:** *a_crit = μₑ·g = ${muE}·9.8 = ${aCritica.toFixed(2)} m/s²*\n**Aceleración caja (al deslizar):** *a_caja = ±μc·g = ±${(muC*g).toFixed(2)} m/s²*`;
+      return `### Ecuaciones del Sistema Caja–Camión\n**Normal:** $N = m \\cdot g = ${m} \\cdot 9.8 = ${normal.toFixed(1)} \\text{ N}$\n**Fricción estática máx.:** $f_{s,\\text{max}} = \\mu_e N = ${muE} \\cdot ${normal.toFixed(1)} = ${fStaticMax.toFixed(1)} \\text{ N}$\n**Fricción cinética:** $f_k = \\mu_c N = ${muC} \\cdot ${normal.toFixed(1)} = ${fKinetic.toFixed(1)} \\text{ N}$\n**Aceleración crítica:** $a_{\\text{crítica}} = \\mu_e g = ${muE} \\cdot 9.8 = ${aCritica.toFixed(2)} \\text{ m/s}^2$\n**Aceleración caja (al deslizar):** $a_{\\text{caja}} = \\pm \\mu_c g = \\pm ${(muC*g).toFixed(2)} \\text{ m/s}^2$`;
 
     if (h('desliza', 'resbala', 'desplaza', 'mover', 'adherencia', 'agarra', 'separa', 'patina'))
-      return `### Análisis del Deslizamiento\nCondición de no deslizamiento: *|a_camion| ≤ a_crit = μₑ·g = ${aCritica.toFixed(2)} m/s²*\n\n**Ahora mismo:**\n- a_camion = ${Math.abs(aCamion).toFixed(2)} m/s² vs. a_crit = ${aCritica.toFixed(2)} m/s²\n- Velocidad relativa: *v_camion − v_caja = ${relVel} m/s*\n\n${Math.abs(aCamion) > aCritica ? `⚠ **DESLIZANDO** — La fricción estática se rompió. Actúa fricción cinética: ${fKinetic.toFixed(1)} N.` : `✅ **NO DESLIZA** — Fricción estática retiene la caja. Ambos van juntos.`}`;
+      return `### Análisis del Deslizamiento\nCondición de no deslizamiento: $|a_{\\text{camión}}| \\leq a_{\\text{crítica}} = \\mu_e g = ${aCritica.toFixed(2)} \\text{ m/s}^2$\n\n**Ahora mismo:**\n- $a_{\\text{camión}} = ${Math.abs(aCamion).toFixed(2)} \\text{ m/s}^2$ vs. $a_{\\text{crítica}} = ${aCritica.toFixed(2)} \\text{ m/s}^2$\n- Velocidad relativa: $v_{\\text{camión}} - v_{\\text{caja}} = ${relVel} \\text{ m/s}$\n\n${Math.abs(aCamion) > aCritica ? `⚠ **DESLIZANDO** — La fricción estática se rompió. Actúa fricción cinética: $f_k = ${fKinetic.toFixed(1)} \\text{ N}$.` : `✅ **NO DESLIZA** — Fricción estática retiene la caja ($f_s \\leq ${fStaticMax.toFixed(1)} \\text{ N}$). Ambos van juntos.`}`;
 
     if (h('aceleracion critica', 'limite', 'umbral', 'maximo para no deslizar'))
-      return `### Aceleración Crítica (a_crit)\n*a_crit = μₑ · g = ${muE} · 9.8 = ${aCritica.toFixed(2)} m/s²*\n\nSi el camión supera esta aceleración, la fricción estática ya no puede mantener la caja pegada.\n\n**Actual:** a_camion = ${Math.abs(aCamion).toFixed(2)} m/s² → ${Math.abs(aCamion) > aCritica ? '⚠ Superada — la caja desliza' : '✅ Bajo el límite — sin deslizamiento'}`;
+      return `### Aceleración Crítica ($a_{\\text{crítica}}$)\n$$a_{\\text{crítica}} = \\mu_e \\cdot g = ${muE} \\cdot 9.8 = ${aCritica.toFixed(2)} \\text{ m/s}^2$$\n\nSi el camión supera esta aceleración, la fricción estática ya no puede mantener la caja pegada.\n\n**Actual:** $a_{\\text{camión}} = ${Math.abs(aCamion).toFixed(2)} \\text{ m/s}^2$ → ${Math.abs(aCamion) > aCritica ? '⚠ Superada — la caja desliza' : '✅ Bajo el límite — sin deslizamiento'}`;
 
     if (h('estatico', 'cinetico', 'diferencia friccion', 'tipo de friccion'))
-      return `### Fricción Estática vs Cinética\n**Estática (μₑ = ${muE}):**\n- Actúa ANTES del movimiento relativo\n- Variable: *0 ≤ f_s ≤ ${fStaticMax.toFixed(1)} N*\n- Es el "pegamento" que une caja y camión\n\n**Cinética (μc = ${muC}):**\n- Actúa DURANTE el deslizamiento\n- Constante: *f_k = ${fKinetic.toFixed(1)} N*\n- Siempre menor que la estática máxima\n\n**¿Por qué μₑ > μc?** Las asperezas microscópicas se enlazan en reposo pero solo rozan en movimiento.`;
+      return `### Fricción Estática vs Cinética\n**Estática ($\\mu_e = ${muE}$):**\n- Actúa ANTES del movimiento relativo\n- Variable: $0 \\leq f_s \\leq f_{s,\\text{max}} = ${fStaticMax.toFixed(1)} \\text{ N}$\n- Es el "pegamento" que une caja y camión\n\n**Cinética ($\\mu_c = ${muC}$):**\n- Actúa DURANTE el deslizamiento\n- Constante: $f_k = ${fKinetic.toFixed(1)} \\text{ N}$\n- Siempre menor que la estática máxima\n\n**¿Por qué $\\mu_e > \\mu_c$?** Las asperezas microscópicas se enlazan en reposo pero solo rozan en movimiento.`;
 
     if (h('frenada', 'frenar', 'freno', 'desacelera', 'brusco'))
-      return `### Frenada Brusca\nCuando el camión frena abruptamente (supera *a_crit = ${aCritica.toFixed(2)} m/s²*):\n\n1. El camión desacelera bruscamente.\n2. La caja continúa por **inercia** (1ª Ley de Newton) a su velocidad anterior.\n3. La fricción estática se rompe (se supera *${fStaticMax.toFixed(1)} N*).\n4. La caja desliza hacia adelante con *f_k = ${fKinetic.toFixed(1)} N* desacelerándola gradualmente.\n\nEsto explica el peligro de carga mal asegurada en frenos de emergencia.`;
+      return `### Frenada Brusca\nCuando el camión frena abruptamente (supera $a_{\\text{crítica}} = ${aCritica.toFixed(2)} \\text{ m/s}^2$):\n\n1. El camión desacelera bruscamente.\n2. La caja continúa por **inercia** (1ª Ley de Newton) a su velocidad anterior.\n3. La fricción estática se rompe (se supera $f_{s,\\text{max}} = ${fStaticMax.toFixed(1)} \\text{ N}$).\n4. La caja desliza hacia adelante con fricción cinética $f_k = ${fKinetic.toFixed(1)} \\text{ N}$ desacelerándola gradualmente.\n\nEsto explica el peligro de carga mal asegurada en frenos de emergencia.`;
 
     if (h('velocidad', 'rapidez', 'cuanto va'))
-      return `### Velocidades Actuales\n- **Camión:** ${vCamion.toFixed(2)} m/s (${(vCamion*3.6).toFixed(1)} km/h)\n- **Caja:** ${vCaja.toFixed(2)} m/s (${(vCaja*3.6).toFixed(1)} km/h)\n- **Velocidad relativa:** ${relVel} m/s\n\n${Math.abs(parseFloat(relVel)) < 0.01 ? '✅ Sin movimiento relativo — caja y camión sincronizados.' : `⚠ Diferencia de ${Math.abs(parseFloat(relVel)).toFixed(2)} m/s — hay deslizamiento activo.`}`;
+      return `### Velocidades Actuales\n- **Camión:** $v_{\\text{camión}} = ${vCamion.toFixed(2)} \\text{ m/s}$ (${(vCamion*3.6).toFixed(1)} $\\text{ km/h}$)\n- **Caja:** $v_{\\text{caja}} = ${vCaja.toFixed(2)} \\text{ m/s}$ (${(vCaja*3.6).toFixed(1)} $\\text{ km/h}$)\n- **Velocidad relativa:** $v_{\\text{camión}} - v_{\\text{caja}} = ${relVel} \\text{ m/s}$\n\n${Math.abs(parseFloat(relVel)) < 0.01 ? '✅ Sin movimiento relativo — caja y camión sincronizados.' : `⚠ Diferencia de ${Math.abs(parseFloat(relVel)).toFixed(2)} \\text{ m/s} — hay deslizamiento activo.`}`;
 
     if (h('posicion', 'donde', 'distancia relativa', 'desfase'))
       return `### Posiciones y Desfase\n- **Posición camión:** ${posCamion} m\n- **Posición caja:** ${posCaja} m\n- **Desfase relativo:** ${Math.abs(parseFloat(posCamion)-parseFloat(posCaja)).toFixed(2)} m\n\n${deslizando ? '⚠ Hay movimiento relativo — las posiciones divergen.' : '✅ Posiciones sincronizadas — sin deslizamiento.'}`;
@@ -765,10 +765,10 @@ Responde basándote en este contexto cuando sea relevante.`;
     const v0 = state.velocidadInicial || 0;
 
     if (h('ecuacion', 'formula', 'matematica', 'expresion', 'cinematica', 'kinemat'))
-      return `### Ecuaciones del M.U.A. (${a.toFixed(2)} m/s²)\n**1. Posición:** *x(t) = x₀ + v₀·t + ½·a·t²* → ahora **${x.toFixed(2)} m**\n**2. Velocidad:** *v(t) = v₀ + a·t* → ahora **${v.toFixed(2)} m/s**\n**3. Sin tiempo:** *v² = v₀² + 2·a·(x−x₀)*\n**4. Desplazamiento medio:** *x = ((v₀+v)/2)·t*\n**5. Newton:** *F_neta = m·a = ${m}·${a.toFixed(2)} = ${F.toFixed(1)} N*`;
+      return `### Ecuaciones del M.U.A. ($${a.toFixed(2)} \\text{ m/s}^2$)\n**1. Posición:** $x(t) = x_0 + v_0 t + \\frac{1}{2} a t^2$ → ahora **${x.toFixed(2)} m**\n**2. Velocidad:** $v(t) = v_0 + a t$ → ahora **${v.toFixed(2)} m/s**\n**3. Relación de velocidades:** $v^2 = v_0^2 + 2 a (x - x_0)$\n**4. Desplazamiento medio:** $x = \\left(\\frac{v_0 + v}{2}\\right) t$\n**5. Segunda Ley de Newton:** $F_{\\text{neta}} = m \\cdot a = ${m} \\cdot ${a.toFixed(2)} = ${F.toFixed(1)} \\text{ N}$`;
 
     if (h('grafica', 'grafico', 'curva', 'recta', 'parabo', 'forma de la grafica'))
-      return `### Gráficas del M.U.A.\n**x vs t:** Parábola (*½·a·t²* domina). La curvatura indica el signo de *a*.\n**v vs t:** Recta con **pendiente = a = ${a.toFixed(2)} m/s²**. El área bajo la recta = desplazamiento.\n**a vs t:** Línea horizontal constante en *a = ${a.toFixed(2)} m/s²* (la definición del MUA).`;
+      return `### Gráficas del M.U.A.\n**x vs t:** Parábola (el término $\\frac{1}{2} a t^2$ domina). La curvatura indica el signo de $a$.\n**v vs t:** Recta con **pendiente $a = ${a.toFixed(2)} \\text{ m/s}^2$**. El área bajo la recta = desplazamiento.\n**a vs t:** Línea horizontal constante en $a = ${a.toFixed(2)} \\text{ m/s}^2$ (aceleración constante).`;
 
     if (h('aceleracion', 'que es la aceleracion', 'define a'))
       return `### Aceleración en el M.U.A.\n*a = Δv / Δt = ${a.toFixed(2)} m/s²*\n\nSignifica que cada segundo la velocidad cambia en **${a.toFixed(2)} m/s**.\n\n- a > 0 → el objeto gana velocidad (acelera)\n- a < 0 → el objeto pierde velocidad (desacelera)\n- a = 0 → velocidad constante (M.R.U.)\n\n**Ahora:** v = ${v.toFixed(2)} m/s, aumentando ${a > 0 ? 'positivamente' : 'negativamente'} a razón de ${Math.abs(a).toFixed(2)} m/s cada segundo.`;
