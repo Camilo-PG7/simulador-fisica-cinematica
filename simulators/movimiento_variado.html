@@ -27,6 +27,19 @@ window.MathJax = {
   --tx:#e2e8f8;--mu:#64748b;--fn:#2d3a52;
   --mono:'JetBrains Mono',monospace;--serif:'Crimson Pro',serif;--sans:'DM Sans',sans-serif;
   --r:10px;--rl:16px;
+  
+  /* Default active theme variables */
+  --theme-accent: var(--ac);
+  --theme-accent-alpha: var(--adm);
+  --theme-accent-alpha-hover: var(--agl);
+  --theme-glow: 0 0 30px rgba(251,191,36,0.25);
+}
+
+body.theme-yellow {
+  --theme-accent: var(--ac);
+  --theme-accent-alpha: var(--adm);
+  --theme-accent-alpha-hover: var(--agl);
+  --theme-glow: 0 0 30px rgba(251,191,36,0.25);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh;padding:32px 18px 100px;overflow-x:hidden}
@@ -187,9 +200,35 @@ h1 em{color:var(--ac);font-style:normal}
   .evo.show{grid-template-columns:1fr}
   .req{flex-direction:column;align-items:flex-start;gap:5px}
 }
+
+/* ── Entrance Animations & Cascaded Staggers ─────────────────────── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in-bottom {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hdr {
+  animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.05s;
+}
+
+.panel {
+  animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.15s;
+}
 </style>
 </head>
-<body>
+<body class="theme-yellow">
 
 <!-- Loader -->
 <div id="ldr">
@@ -944,15 +983,16 @@ window.verificarMV=function(){
 
 <!-- Pregunta de verificación -->
 <style>
-.mv-section{max-width:860px;margin:18px auto 32px;padding:0 18px;}
-.mv-card{background:var(--s0);border:1px solid var(--bdr);border-left:3px solid var(--ac);border-radius:var(--rl);padding:18px 22px;}
-.mv-card h4{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ac);margin-bottom:12px;}
+.mv-section{max-width:860px;margin:18px auto 32px;padding:0 18px;animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay: 0.38s;}
+.mv-card{background:var(--s0);border:1px solid var(--bdr);border-left:3px solid var(--theme-accent);border-radius:var(--rl);padding:18px 22px;}
+.mv-card h4{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--theme-accent);margin-bottom:12px;}
 .mv-txt{font-size:.9rem;line-height:1.7;color:var(--tx);margin-bottom:14px;font-family:var(--sans);}
 .mv-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.mv-input{flex:1;min-width:120px;max-width:180px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.85rem;padding:8px 12px;outline:none;}
-.mv-input:focus{border-color:rgba(251,191,36,.4);}
-.mv-btn{background:var(--ac);border:none;border-radius:var(--r);color:#07090f;font-family:var(--mono);font-size:.75rem;font-weight:700;padding:9px 16px;cursor:pointer;transition:filter .15s;}
-.mv-btn:hover{filter:brightness(1.15);}
+.mv-input{flex:1;min-width:120px;max-width:180px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.85rem;padding:8px 12px;outline:none;transition: border-color 0.2s;}
+.mv-input:focus{border-color:var(--theme-accent);}
+.mv-btn{background:var(--theme-accent);border:none;border-radius:var(--r);color:#07090f;font-family:var(--mono);font-size:.75rem;font-weight:700;padding:9px 16px;cursor:pointer;box-shadow: var(--theme-glow);transition:filter .15s, transform 0.1s, box-shadow 0.2s;}
+.mv-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.mv-btn:active{transform:scale(0.97);}
 .mv-btn2{background:transparent;border:1px solid var(--bdr2);border-radius:var(--r);color:var(--mu);font-family:var(--mono);font-size:.75rem;font-weight:700;padding:9px 16px;cursor:pointer;transition:all .15s;}
 .mv-btn2:hover{color:var(--tx);background:rgba(255,255,255,.04);}
 .mv-feedback{margin-top:12px;padding:10px 14px;border-radius:var(--r);font-family:var(--mono);font-size:.75rem;display:none;}
@@ -993,5 +1033,6 @@ window.verificarMV=function(){
     }
   });
 </script>
+<script src="../core/cursor.js"></script>
 </body>
 </html>
