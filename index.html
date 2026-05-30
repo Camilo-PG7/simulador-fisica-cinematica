@@ -33,12 +33,25 @@ body::before{
     linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
     linear-gradient(90deg,rgba(0,229,255,0.03) 1px, transparent 1px);
   background-size:40px 40px; pointer-events:none; z-index:0;
+  animation: scroll-grid 20s linear infinite;
+}
+
+@keyframes scroll-grid {
+  from { background-position: 0 0; }
+  to { background-position: 40px 40px; }
 }
 
 /* ── SCREENS ── */
-.screen{ display:none; min-height:100vh; padding:40px 20px; animation:fade 0.4s ease; position:relative; z-index:1; }
-.screen.active{ display:flex; flex-direction:column; align-items:center; justify-content:center; }
-@keyframes fade{ from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+.screen{ display:none; min-height:100vh; padding:40px 20px; position:relative; z-index:1; }
+.screen.active{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  animation: screen-intro 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes screen-intro {
+  from { opacity:0; transform:translateY(24px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
 
 /* ── WELCOME ── */
 .welcome-badge{
@@ -55,8 +68,16 @@ body::before{
 .welcome-title{ font-size:clamp(2.8rem,7vw,6rem); font-weight:800; text-align:center; line-height:1.1; }
 .welcome-title .line2{
   display:block;
-  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  background:linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent5), var(--accent1));
+  background-size: 300% 100%;
+  animation: gradient-shift 6s ease infinite;
   -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .welcome-subtitle{
@@ -122,7 +143,118 @@ body::before{
   content:''; position:absolute; inset:0; opacity:0;
   transition:opacity 0.3s;
 }
-.sim-card:hover{ transform:translateY(-5px); }
+.sim-card:hover{ transform:translateY(-8px); }
+
+/* Staggered card animations when screen is active */
+#screen-menu.active #existing-cards .sim-card {
+  animation: card-intro 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+#screen-menu.active #existing-cards .sim-card:nth-child(1) { animation-delay: 0.05s; }
+#screen-menu.active #existing-cards .sim-card:nth-child(2) { animation-delay: 0.1s; }
+#screen-menu.active #existing-cards .sim-card:nth-child(3) { animation-delay: 0.15s; }
+#screen-menu.active #existing-cards .sim-card:nth-child(4) { animation-delay: 0.2s; }
+
+#screen-menu.active #new-cards .sim-card {
+  animation: card-intro 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+#screen-menu.active #new-cards .sim-card:nth-child(1) { animation-delay: 0.25s; }
+#screen-menu.active #new-cards .sim-card:nth-child(2) { animation-delay: 0.3s; }
+#screen-menu.active #new-cards .sim-card:nth-child(3) { animation-delay: 0.35s; }
+#screen-menu.active #new-cards .sim-card:nth-child(4) { animation-delay: 0.4s; }
+#screen-menu.active #new-cards .sim-card:nth-child(5) { animation-delay: 0.45s; }
+
+@keyframes card-intro {
+  from { opacity: 0; transform: translateY(32px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Custom micro-animations on card hover */
+.sim-card .card-icon {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 1. MRU + MCU (c1): Spin wheel */
+.sim-card.c1:hover .card-icon {
+  animation: spin-wheel 2s linear infinite;
+}
+@keyframes spin-wheel {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 2. MUA (c2): Launch rocket */
+.sim-card.c2:hover .card-icon {
+  animation: bounce-rocket 0.6s ease infinite alternate;
+}
+@keyframes bounce-rocket {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(6px, -6px) scale(1.1); }
+}
+
+/* 3. MUA + Fricción (c3): Slide box */
+.sim-card.c3:hover .card-icon {
+  animation: slide-box 0.8s ease infinite alternate;
+}
+@keyframes slide-box {
+  0% { transform: translateX(-6px); }
+  100% { transform: translateX(6px); }
+}
+
+/* 4. Movimiento Variado (c4): Float integral */
+.sim-card.c4:hover .card-icon {
+  animation: float-integral 1.2s ease-in-out infinite alternate;
+}
+@keyframes float-integral {
+  0% { transform: translateY(-4px) scale(1); }
+  100% { transform: translateY(4px) scale(1.08); }
+}
+
+/* 5. Proyectil (c5): Pulse target */
+.sim-card.c5:hover .card-icon {
+  animation: pulse-target 0.6s ease infinite alternate;
+}
+@keyframes pulse-target {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--accent2)); }
+  100% { transform: scale(1.25); filter: drop-shadow(0 0 10px var(--accent2)); }
+}
+
+/* 6. Plano Inclinado (c6): Slide down ramp */
+.sim-card.c6:hover .card-icon {
+  animation: slide-plane 0.8s ease infinite alternate;
+}
+@keyframes slide-plane {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(6px, 6px); }
+}
+
+/* 7. Péndulo Simple (c1n): Swing pendulum */
+.sim-card.c1n:hover .card-icon {
+  animation: swing-pendulum 1.4s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+@keyframes swing-pendulum {
+  0% { transform: rotate(-25deg); }
+  100% { transform: rotate(25deg); }
+}
+
+/* 8. Máquina de Atwood (c2n): Tilt balance */
+.sim-card.c2n:hover .card-icon {
+  animation: tilt-balance 1s ease-in-out infinite alternate;
+}
+@keyframes tilt-balance {
+  0% { transform: rotate(-10deg); }
+  100% { transform: rotate(10deg); }
+}
+
+/* 9. Caja sobre Vehículo (c3n): Drive truck */
+.sim-card.c3n:hover .card-icon {
+  animation: drive-truck 0.8s ease-in-out infinite alternate;
+}
+@keyframes drive-truck {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(8px); }
+}
 
 /* accent hover per class */
 .sim-card.c1:hover{border-color:var(--accent1);box-shadow:var(--glow1);}
