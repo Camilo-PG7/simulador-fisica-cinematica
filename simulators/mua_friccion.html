@@ -179,6 +179,15 @@
       transform: scale(1.3);
       box-shadow: 0 0 14px var(--theme-accent);
     }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%; border: none;
+      background: var(--theme-accent); box-shadow: 0 0 8px var(--theme-glow); cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    input[type="range"]:hover::-moz-range-thumb {
+      transform: scale(1.3);
+      box-shadow: 0 0 14px var(--theme-accent);
+    }
 
     /* ── Buttons ── */
     .btn-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px; }
