@@ -12,6 +12,42 @@
 
     const state = this.getState();
 
+    // 1. Detección explícita de temas fuera de contexto o bromas ("chistositos")
+    const offTopicKeywords = [
+      'chiste', 'broma', 'chistoso', 'juego', 'jugar', 'poema', 'poesia', 'cancion', 'musica', 
+      'receta', 'cocina', 'cocinar', 'comida', 'futbol', 'messi', 'ronaldo', 'partido', 'politica', 
+      'presidente', 'amor', 'novia', 'novio', 'clima', 'chisme', 'chismosear', 'cuento', 
+      'minecraft', 'fortnite', 'videojuego', 'pelicula', 'serie', 'anime', 'religion', 'dios', 
+      'quimica', 'biologia', 'sociales', 'ingles', 'programacion', 'codigo', 'javascript', 'python', 
+      'html', 'dinero', 'dolar', 'troll', 'burla', 'meme', 'sexo', 'groseria', 'insulto', 'tonto',
+      'estupido', 'idiota', 'mierda', 'puto', 'puta', 'marica', 'huevon', 'gonorrea', 'pendejo', 'pendeja',
+      'chingar', 'cabron', 'culazo', 'culito', 'joda', 'joder'
+    ];
+
+    if (this._has(msg, ...offTopicKeywords)) {
+      return `### 🔬 Enfoque en la Física\nComo tu **Asistente de Física**, mi único propósito es ayudarte a explorar esta simulación interactiva y comprender las leyes del movimiento, las fuerzas y la energía.\n\nNo puedo responder a preguntas sobre temas externos, bromas o contenido fuera de contexto. \n\n**¿En qué puedo ayudarte hoy?**\n- 📐 Ecuaciones y fórmulas de la simulación\n- 📊 Gráficas e interpretación de resultados\n- 🔬 Leyes de Newton, fricción, péndulo, etc.\n- 🔢 Variables actuales en tiempo real`;
+    }
+
+    // 2. Filtro inteligente para preguntas largas completamente ajenas a la física
+    const physicsAndGeneralKeywords = [
+      // Conceptos/Física
+      'gravedad', 'newton', 'ley', 'fuerza', 'peso', 'masa', 'energia', 'trabajo', 'friccion', 'rozamiento', 
+      'mru', 'mcu', 'velocidad', 'aceleracion', 'pendulo', 'atwood', 'tension', 'polea', 'angulo', 'plano', 
+      'rampa', 'trayectoria', 'tiempo', 'distancia', 'formula', 'ecuacion', 'grafica', 'desliza', 'frenada', 
+      'curva', 'rk4', 'variado', 'integral', 'derivada', 'sistema', 'referencia', 'inercial', 'si', 'unidades', 
+      'normal', 'critica', 'tangencial', 'centripeta', 'periodo', 'frecuencia', 'omega', 'amplitud', 'rapidez', 
+      'descompo', 'componente', 'vector', 'caida', 'libre', 'lanzamiento', 'parabola', 'parabolica', 'movimiento', 
+      'posicion', 'simula', 'funcion',
+      // Conversación/Ayuda/Saludos
+      'hola', 'buenas', 'saludos', 'hey', 'gracias', 'ayuda', 'saber', 'puedes', 'comandos', 'temas', 'que es', 
+      'explic', 'dime', 'porque', 'por que', 'como', 'entien', 'si', 'no', 'mas', 'ver', 'mostrar'
+    ];
+
+    const hasPhysicsOrGeneral = physicsAndGeneralKeywords.some(kw => msg.includes(kw));
+    if (msg.length > 20 && !hasPhysicsOrGeneral) {
+      return `### 🔬 Asistente de Física\nNo he detectado términos relacionados con la física clásica o el funcionamiento de esta simulación en tu pregunta.\n\nComo tu **Asistente de Física**, estoy diseñado exclusivamente para ayudarte a explorar este simulador y comprender conceptos científicos.\n\n**¿De qué te gustaría hablar?**\n- 📐 Ecuaciones y fórmulas del movimiento\n- 🔬 Conceptos físicos clave (fricción, gravedad, Newton...)\n- 📊 Análisis de las gráficas en tiempo real\n- 🔢 Variables actuales de la simulación`;
+    }
+
     // Check cross-topic general questions first
     const general = this._getOfflineCrossTopicAnswer(msg, state);
     if (general) return general;

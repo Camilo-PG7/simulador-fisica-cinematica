@@ -31,6 +31,24 @@ class PhysicsChatBot {
   // ═══════════════════════════════════════════════════════════
 
   _injectDOM() {
+    // Inject KaTeX dynamically if not present
+    if (!document.getElementById('katex-css')) {
+      const css = document.createElement('link');
+      css.id = 'katex-css';
+      css.rel = 'stylesheet';
+      css.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css';
+      document.head.appendChild(css);
+
+      const script1 = document.createElement('script');
+      script1.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js';
+      script1.onload = () => {
+        const script2 = document.createElement('script');
+        script2.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js';
+        document.head.appendChild(script2);
+      };
+      document.head.appendChild(script1);
+    }
+
     // FAB Button
     const fab = document.createElement('button');
     fab.className = 'chatbot-fab';
@@ -379,6 +397,7 @@ REGLAS DE COMPORTAMIENTO:
 6. Respuestas concisas pero completas (máximo 200 palabras a menos que se pida una explicación extendida).
 7. Usa negritas (**texto**) para conceptos clave y cursivas (*texto*) o notación matemática para variables.
 8. Si mencionas valores numéricos del estado actual, indícalo claramente como "según la simulación actual".
+9. CONTROL DE CONTEXTO (MANDATORIO): Si el estudiante te hace preguntas fuera de contexto (chistes no relacionados con física, bromas, recetas, política, fútbol, música, videojuegos, programación de software, historias de ficción, tareas de otras asignaturas como historia/biología/química, o cualquier otra cosa no relacionada con la física clásica, las matemáticas aplicadas a la física o esta simulación), debes negarte amablemente a responder. Di algo como: "Como tu Asistente de Física, mi propósito es ayudarte a comprender los conceptos científicos y explorar esta simulación. No puedo responder a preguntas fuera de este ámbito. ¿Tienes alguna duda sobre la física de la simulación actual?"
 
 MARCO TEÓRICO — CINEMÁTICA Y DINÁMICA:
 
@@ -557,40 +576,126 @@ Responde basándote en este contexto cuando sea relevante.`;
 
     this.messagesEl.appendChild(msg);
     this._scrollToBottom();
+
+    // Render KaTeX if available
+    const renderMath = () => {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(msg, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    };
+    
+    if (window.renderMathInElement) {
+      renderMath();
+    } else {
+      setTimeout(renderMath, 800); // Wait for scripts to load if this is the first message
+    }
   }
 
 
   _formatMarkdown(text) {
-    // Simple markdown parser for chat
-    let html = this._escapeHtml(text);
+    if (!text) return '';
+    
+    // Extract block math to prevent parser interference
+    const mathBlocks = [];
+    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
+      mathBlocks.push(match);
+      return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+    });
 
-    // Bold: **text**
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Extract inline math
+    const inlineMath = [];
+    text = text.replace(/\$([^\$\n]+?)\$/g, (match) => {
+      inlineMath.push(match);
+      return `__INLINE_MATH_${inlineMath.length - 1}__`;
+    });
 
-    // Italic: *text*
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    const lines = text.split('\n');
+    let html = '';
+    let inTable = false;
+    let inList = false;
 
-    // Inline code: `text`
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+    const closeTags = () => {
+      let res = '';
+      if (inTable) { res += '</tbody></table></div>'; inTable = false; }
+      if (inList) { res += '</ul>'; inList = false; }
+      return res;
+    };
 
-    // Bullet lists: lines starting with - or •
-    html = html.replace(/^[\-•]\s+(.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-    // Clean up multiple consecutive <ul> tags
-    html = html.replace(/<\/ul>\s*<ul>/g, '');
+    const processInline = (str) => {
+      let res = this._escapeHtml(str);
+      res = res.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      res = res.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      res = res.replace(/`([^`]+)`/g, '<code>$1</code>');
+      return res;
+    };
 
-    // Numbered lists: lines starting with 1. 2. etc
-    html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
 
-    // Line breaks
-    html = html.replace(/\n\n/g, '</p><p>');
-    html = html.replace(/\n/g, '<br>');
+      if (line.match(/^__MATH_BLOCK_\d+__$/)) {
+        html += closeTags() + `<div class="math-display">${line}</div>`;
+        continue;
+      }
 
-    // Wrap in paragraph
-    html = `<p>${html}</p>`;
+      // Tables
+      if (line.startsWith('|') && line.endsWith('|')) {
+        if (!inTable) {
+          html += closeTags() + '<div class="chatbot-table-container"><table class="chatbot-table"><tbody>';
+          inTable = true;
+        }
+        if (line.match(/^\|[\s\-:|]+\|$/)) continue; // skip header separator
+        const cells = line.split('|').slice(1, -1).map(c => c.trim());
+        html += '<tr>' + cells.map(cell => `<td>${processInline(cell)}</td>`).join('') + '</tr>';
+        continue;
+      }
 
-    // Clean empty paragraphs
-    html = html.replace(/<p>\s*<\/p>/g, '');
+      // Headers
+      if (line.startsWith('### ')) {
+        html += closeTags() + `<h3>${processInline(line.substring(4))}</h3>`;
+        continue;
+      }
+      if (line.startsWith('## ')) {
+        html += closeTags() + `<h2>${processInline(line.substring(3))}</h2>`;
+        continue;
+      }
+
+      // Lists
+      if (line.match(/^[\-•]\s+/) || line.match(/^\d+\.\s+/)) {
+        if (!inList) {
+          html += closeTags() + '<ul>';
+          inList = true;
+        }
+        const liContent = line.replace(/^[\-•]\s+/, '').replace(/^\d+\.\s+/, '');
+        html += `<li>${processInline(liContent)}</li>`;
+        continue;
+      }
+
+      html += closeTags();
+
+      if (line === '') continue; // skip empty lines between blocks
+
+      html += `<p>${processInline(line)}</p>`;
+    }
+
+    html += closeTags();
+
+    // Restore inline math
+    inlineMath.forEach((math, idx) => {
+      html = html.replace(`__INLINE_MATH_${idx}__`, this._escapeHtml(math));
+    });
+
+    // Restore block math
+    mathBlocks.forEach((math, idx) => {
+      html = html.replace(`__MATH_BLOCK_${idx}__`, this._escapeHtml(math));
+    });
 
     return html;
   }
@@ -620,6 +725,42 @@ Responde basándote en este contexto cuando sea relevante.`;
       .trim();
 
     const state = this.getState();
+
+    // 1. Detección explícita de temas fuera de contexto o bromas ("chistositos")
+    const offTopicKeywords = [
+      'chiste', 'broma', 'chistoso', 'juego', 'jugar', 'poema', 'poesia', 'cancion', 'musica', 
+      'receta', 'cocina', 'cocinar', 'comida', 'futbol', 'messi', 'ronaldo', 'partido', 'politica', 
+      'presidente', 'amor', 'novia', 'novio', 'clima', 'chisme', 'chismosear', 'cuento', 
+      'minecraft', 'fortnite', 'videojuego', 'pelicula', 'serie', 'anime', 'religion', 'dios', 
+      'quimica', 'biologia', 'sociales', 'ingles', 'programacion', 'codigo', 'javascript', 'python', 
+      'html', 'dinero', 'dolar', 'troll', 'burla', 'meme', 'sexo', 'groseria', 'insulto', 'tonto',
+      'estupido', 'idiota', 'mierda', 'puto', 'puta', 'marica', 'huevon', 'gonorrea', 'pendejo', 'pendeja',
+      'chingar', 'cabron', 'culazo', 'culito', 'joda', 'joder'
+    ];
+
+    if (this._has(msg, ...offTopicKeywords)) {
+      return `### 🔬 Enfoque en la Física\nComo tu **Asistente de Física**, mi único propósito es ayudarte a explorar esta simulación interactiva y comprender las leyes del movimiento, las fuerzas y la energía.\n\nNo puedo responder a preguntas sobre temas externos, bromas o contenido fuera de contexto. \n\n**¿En qué puedo ayudarte hoy?**\n- 📐 Ecuaciones y fórmulas de la simulación\n- 📊 Gráficas e interpretación de resultados\n- 🔬 Leyes de Newton, fricción, péndulo, etc.\n- 🔢 Variables actuales en tiempo real`;
+    }
+
+    // 2. Filtro inteligente para preguntas largas completamente ajenas a la física
+    const physicsAndGeneralKeywords = [
+      // Conceptos/Física
+      'gravedad', 'newton', 'ley', 'fuerza', 'peso', 'masa', 'energia', 'trabajo', 'friccion', 'rozamiento', 
+      'mru', 'mcu', 'velocidad', 'aceleracion', 'pendulo', 'atwood', 'tension', 'polea', 'angulo', 'plano', 
+      'rampa', 'trayectoria', 'tiempo', 'distancia', 'formula', 'ecuacion', 'grafica', 'desliza', 'frenada', 
+      'curva', 'rk4', 'variado', 'integral', 'derivada', 'sistema', 'referencia', 'inercial', 'si', 'unidades', 
+      'normal', 'critica', 'tangencial', 'centripeta', 'periodo', 'frecuencia', 'omega', 'amplitud', 'rapidez', 
+      'descompo', 'componente', 'vector', 'caida', 'libre', 'lanzamiento', 'parabola', 'parabolica', 'movimiento', 
+      'posicion', 'simula', 'funcion',
+      // Conversación/Ayuda/Saludos
+      'hola', 'buenas', 'saludos', 'hey', 'gracias', 'ayuda', 'saber', 'puedes', 'comandos', 'temas', 'que es', 
+      'explic', 'dime', 'porque', 'por que', 'como', 'entien', 'si', 'no', 'mas', 'ver', 'mostrar'
+    ];
+
+    const hasPhysicsOrGeneral = physicsAndGeneralKeywords.some(kw => msg.includes(kw));
+    if (msg.length > 20 && !hasPhysicsOrGeneral) {
+      return `### 🔬 Asistente de Física\nNo he detectado términos relacionados con la física clásica o el funcionamiento de esta simulación en tu pregunta.\n\nComo tu **Asistente de Física**, estoy diseñado exclusivamente para ayudarte a explorar este simulador y comprender conceptos científicos.\n\n**¿De qué te gustaría hablar?**\n- 📐 Ecuaciones y fórmulas del movimiento\n- 🔬 Conceptos físicos clave (fricción, gravedad, Newton...)\n- 📊 Análisis de las gráficas en tiempo real\n- 🔢 Variables actuales de la simulación`;
+    }
 
     // Check cross-topic general questions first
     const general = this._getOfflineCrossTopicAnswer(msg, state);
