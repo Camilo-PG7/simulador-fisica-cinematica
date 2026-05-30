@@ -8,11 +8,7 @@
   const styleEl = document.createElement('style');
   styleEl.innerHTML = `
     @media (hover: hover) and (pointer: fine) {
-      body, 
-      a, button, input, select, textarea, label, [role="button"],
-      .sim-card, .btn-primary, .btn-back-top, .btn-clear-hist, 
-      .chatbot-fab, .chatbot-chip, .chatbot-input, .chatbot-btn-close,
-      .sim-btn, .btn-verificar, .slider-sw {
+      *, *::before, *::after {
         cursor: none !important;
       }
       
