@@ -18,6 +18,12 @@
   --glow1:0 0 30px rgba(0,229,255,0.25); --glow2:0 0 30px rgba(255,60,110,0.25);
   --glow3:0 0 30px rgba(163,255,107,0.25); --glow4:0 0 30px rgba(255,209,102,0.25);
   --glow5:0 0 30px rgba(181,123,238,0.25); --glow6:0 0 30px rgba(255,159,67,0.25);
+  
+  /* Default active theme variables for cursor compatibility */
+  --theme-accent: var(--accent1);
+  --theme-accent-alpha: rgba(0, 229, 255, 0.08);
+  --theme-accent-alpha-hover: rgba(0, 229, 255, 0.15);
+  --theme-glow: var(--glow1);
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -340,83 +346,11 @@ body::before{
   .sim-cards{ grid-template-columns:1fr; }
 }
 
-/* ── Custom Neon Interactive Cursor ── */
-@media (hover: hover) and (pointer: fine) {
-  body {
-    cursor: none;
-  }
-  a, button, .sim-card, .btn-primary, .btn-back-top, .btn-clear-hist, .chatbot-fab, .chatbot-chip, .chatbot-input, .chatbot-btn-close {
-    cursor: none;
-  }
-  
-  .custom-cursor-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--accent1);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 100000;
-    transform: translate(-50%, -50%);
-    transition: width 0.2s, height 0.2s, background-color 0.2s;
-    box-shadow: 0 0 10px var(--accent1);
-  }
-  
-  .custom-cursor-ring {
-    width: 36px;
-    height: 36px;
-    border: 2px solid rgba(0, 229, 255, 0.4);
-    border-radius: 50%;
-    position: fixed;
-    pointer-events: none;
-    z-index: 99999;
-    transform: translate(-50%, -50%);
-    transition: border-color 0.25s, width 0.25s, height 0.25s, background-color 0.25s;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
-  }
-  
-  /* Hover state */
-  .custom-cursor-hover-dot {
-    width: 4px;
-    height: 4px;
-    background: var(--accent2) !important;
-    box-shadow: 0 0 12px var(--accent2) !important;
-  }
-  
-  .custom-cursor-hover-ring {
-    width: 56px;
-    height: 56px;
-    border-color: var(--accent2) !important;
-    background: rgba(255, 60, 110, 0.08) !important;
-    box-shadow: 0 0 20px rgba(255, 60, 110, 0.2) !important;
-  }
 
-  /* Click state */
-  .custom-cursor-clicking-dot {
-    background-color: var(--accent3) !important;
-    box-shadow: 0 0 10px var(--accent3) !important;
-  }
-  
-  .custom-cursor-clicking-ring {
-    transform: translate(-50%, -50%) scale(0.7) !important;
-    border-color: var(--accent3) !important;
-    background: rgba(163, 255, 107, 0.15) !important;
-    box-shadow: 0 0 15px rgba(163, 255, 107, 0.4) !important;
-  }
-}
-
-@media (hover: none) {
-  .custom-cursor-dot, .custom-cursor-ring {
-    display: none !important;
-  }
-}
 </style>
 </head>
 <body>
 
-<!-- Custom Cursor Elements -->
-<div class="custom-cursor-dot" id="customCursorDot"></div>
-<div class="custom-cursor-ring" id="customCursorRing"></div>
 
 <!-- WELCOME -->
 <section id="screen-welcome" class="screen active">
@@ -620,85 +554,6 @@ function showWelcome() {
   if (window.location.hash === '#menu') showMenu();
 })();
 
-// ── Custom Interactive Cursor Script ──────────────────────────────
-(function initCustomCursor() {
-  const dot = document.getElementById('customCursorDot');
-  const ring = document.getElementById('customCursorRing');
-  
-  if (!dot || !ring) return;
-
-  let mouseX = -100;
-  let mouseY = -100;
-  let ringX = -100;
-  let ringY = -100;
-  let isMoving = false;
-
-  dot.style.opacity = '0';
-  ring.style.opacity = '0';
-
-  window.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    
-    if (!isMoving) {
-      dot.style.opacity = '1';
-      ring.style.opacity = '1';
-      isMoving = true;
-    }
-
-    dot.style.left = mouseX + 'px';
-    dot.style.top = mouseY + 'px';
-  });
-
-  // Lerp tracking for trailing ring
-  function lerpRing() {
-    const ease = 0.15;
-    ringX += (mouseX - ringX) * ease;
-    ringY += (mouseY - ringY) * ease;
-    
-    ring.style.left = ringX + 'px';
-    ring.style.top = ringY + 'px';
-    
-    requestAnimationFrame(lerpRing);
-  }
-  lerpRing();
-
-  // Mouse hover state delegation
-  document.addEventListener('mouseover', (e) => {
-    const target = e.target.closest('a, button, .sim-card, .btn-primary, .btn-back-top, .btn-clear-hist, .chatbot-fab, .chatbot-chip, .chatbot-input, .chatbot-btn-close');
-    if (target) {
-      dot.classList.add('custom-cursor-hover-dot');
-      ring.classList.add('custom-cursor-hover-ring');
-    }
-  });
-
-  document.addEventListener('mouseout', (e) => {
-    const target = e.target.closest('a, button, .sim-card, .btn-primary, .btn-back-top, .btn-clear-hist, .chatbot-fab, .chatbot-chip, .chatbot-input, .chatbot-btn-close');
-    if (target) {
-      dot.classList.remove('custom-cursor-hover-dot');
-      ring.classList.remove('custom-cursor-hover-ring');
-    }
-  });
-
-  // Mouse down/up click transitions
-  window.addEventListener('mousedown', () => {
-    dot.classList.add('custom-cursor-clicking-dot');
-    ring.classList.add('custom-cursor-clicking-ring');
-  });
-
-  window.addEventListener('mouseup', () => {
-    dot.classList.remove('custom-cursor-clicking-dot');
-    ring.classList.remove('custom-cursor-clicking-ring');
-  });
-
-  // Hide cursor when leaving window
-  document.addEventListener('mouseleave', () => {
-    dot.style.opacity = '0';
-    ring.style.opacity = '0';
-    isMoving = false;
-  });
-})();
-</script>
-
+<script src="core/cursor.js"></script>
 </body>
 </html>

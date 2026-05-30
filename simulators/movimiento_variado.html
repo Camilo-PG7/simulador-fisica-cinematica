@@ -43,7 +43,21 @@ body.theme-yellow {
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh;padding:32px 18px 100px;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px);background-size:28px 28px}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(var(--theme-accent-alpha) 1px, transparent 1px);
+  background-size: 28px 28px;
+  animation: scroll-grid-radial 30s linear infinite;
+}
+
+@keyframes scroll-grid-radial {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
 .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto}
 
 /* loader */
