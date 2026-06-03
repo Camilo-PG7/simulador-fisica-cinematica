@@ -11,6 +11,8 @@ class SFX {
   static windGain = null;
   static windFilter = null;
 
+  static hooksInitialized = false;
+
   static init() {
     if (this.ctx) return;
     try {
@@ -23,15 +25,12 @@ class SFX {
       // Attempt to resume context if it starts suspended (browser auto-play policy)
       if (this.ctx.state === 'suspended') {
         const resume = () => {
-          this.ctx.resume();
-          document.removeEventListener('click', resume);
-          document.removeEventListener('keydown', resume);
+          if (this.ctx.state === 'suspended') this.ctx.resume();
         };
-        document.addEventListener('click', resume);
-        document.addEventListener('keydown', resume);
+        document.addEventListener('click', resume, { once: true });
+        document.addEventListener('touchstart', resume, { once: true });
+        document.addEventListener('keydown', resume, { once: true });
       }
-      
-      this.initGlobalUIHooks();
     } catch (e) {
       console.warn("Web Audio API no soportada en este navegador.", e);
     }
@@ -175,32 +174,45 @@ class SFX {
   }
 
   static initGlobalUIHooks() {
+    if (this.hooksInitialized) return;
+    this.hooksInitialized = true;
+
     // Add audio hooks to common interactive elements dynamically
     document.body.addEventListener('mouseenter', (e) => {
       const t = e.target;
       if (t.tagName === 'BUTTON' || t.tagName === 'A' || t.tagName === 'SELECT' || 
           (t.tagName === 'INPUT' && t.type === 'range') || 
           t.classList?.contains('param-group')) {
-        SFX.playHover();
+        if (SFX.ctx && !SFX.isMuted) SFX.playHover();
       }
     }, true);
 
     document.body.addEventListener('mousedown', (e) => {
+      // Auto-init context on first interaction if not yet created
+      if (!SFX.ctx && !SFX.isMuted) {
+        SFX.init();
+      }
+      
+      if (SFX.ctx && SFX.ctx.state === 'suspended') {
+        SFX.ctx.resume();
+      }
+
       const t = e.target;
       if (t.tagName === 'BUTTON' || t.tagName === 'A' || t.tagName === 'SELECT' || 
           (t.tagName === 'INPUT' && (t.type === 'range' || t.type === 'checkbox'))) {
-        SFX.playClick();
+        if (!SFX.isMuted) SFX.playClick();
       }
     }, true);
+
+    document.body.addEventListener('touchstart', (e) => {
+      if (!SFX.ctx && !SFX.isMuted) SFX.init();
+      if (SFX.ctx && SFX.ctx.state === 'suspended') SFX.ctx.resume();
+    }, { passive: true, capture: true });
   }
 }
 
-// Auto-initialize when clicking anywhere on the document for the first time
+// Auto-initialize UI hooks on load
 window.addEventListener('DOMContentLoaded', () => {
   SFX.updateMuteButtons();
-  const autoInit = () => {
-    SFX.init();
-    document.removeEventListener('click', autoInit);
-  };
-  document.addEventListener('click', autoInit);
+  SFX.initGlobalUIHooks();
 });
