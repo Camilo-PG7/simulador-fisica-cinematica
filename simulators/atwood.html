@@ -33,6 +33,7 @@
 <body class="theme-rose">
 
 <a href="../index.html#menu" id="btnVolver">← Volver</a>
+<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
 
 <div class="main-container">
   <div class="simulation-area">
@@ -220,8 +221,12 @@ function actualizarFisica(){
   pos1+=vel*dt;
   pos2-=vel*dt;
 
-  if(pos1>MAX_DROP){ pos1=MAX_DROP; vel=0; }
-  if(pos2<-MAX_DROP){ pos2=-MAX_DROP; vel=0; }
+  if(pos1>MAX_DROP || pos2<-MAX_DROP){
+    if(Math.abs(vel) > 0.1 && window.SFX) SFX.playThud(Math.abs(vel) / 5);
+    if(pos1>MAX_DROP) pos1=MAX_DROP;
+    if(pos2<-MAX_DROP) pos2=-MAX_DROP;
+    vel=0;
+  }
 
   datosCSV.push({t:tiempo,vel,pos1,pos2});
   if(frameCount%2===0) actualizarGraficas(tiempo,vel,pos1,pos2);
@@ -458,6 +463,7 @@ function verificar(){
     })
   });
 </script>
+<script src="../core/audio.js"></script>
 <script src="../core/cursor.js"></script>
 </body>
 </html>

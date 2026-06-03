@@ -52,6 +52,7 @@
 <body class="theme-green">
 
 <a href="../index.html#menu" id="btnVolver">← Volver</a>
+<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
 
 <div class="main-container">
   <div class="simulation-area">
@@ -335,6 +336,14 @@ function actualizarFisica(){
 
   // Aplicar límites físicos (para evitar desfases visuales o flotaciones)
   let x_rel = posCaja_new - posCamion_new;
+  let prev_x_rel = posCaja - posCamion;
+  
+  if (x_rel >= limVal && prev_x_rel < limVal) {
+    if (window.SFX) SFX.playThud(Math.min(1, Math.abs(velCaja_new - velCamion_new)/2));
+  } else if (x_rel <= -limVal && prev_x_rel > -limVal) {
+    if (window.SFX) SFX.playThud(Math.min(1, Math.abs(velCaja_new - velCamion_new)/2));
+  }
+
   if (x_rel > limVal) {
     posCaja_new = posCamion_new + limVal;
     velCaja_new = velCamion_new;
@@ -631,6 +640,7 @@ function verificar(){
     })
   });
 </script>
+<script src="../core/audio.js"></script>
 <script src="../core/cursor.js"></script>
 </body>
 </html>

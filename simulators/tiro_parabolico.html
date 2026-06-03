@@ -46,6 +46,7 @@
 <body class="theme-purple">
 
 <a href="../index.html#menu" id="btnVolver">← Volver</a>
+<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
 
 <div class="main-container">
   <div class="simulation-area">
@@ -390,7 +391,15 @@ function actualizarFisica() {
   py = y0ini + vy0*tiempo - 0.5*g*tiempo*tiempo;
 
   if (py <= 0 && tiempo > 0.05) {
-    py = 0; landado = true;
+    py = 0; 
+    if (!landado && window.SFX) {
+      SFX.stopWind();
+      SFX.playThud(Math.min(1, Math.abs(vy0 - g*tiempo) / 15));
+    }
+    landado = true;
+  } else if (!landado && window.SFX && !pausa) {
+    const vyNow = vy0 - g * tiempo;
+    SFX.playWind(Math.sqrt(vx0*vx0 + vyNow*vyNow));
   }
 
   trayectoria.push({ x: px, y: py });
@@ -434,6 +443,7 @@ function togglePause() {
   const btn = document.getElementById('btnPausa');
   btn.textContent = pausa ? '▶ Reanudar' : '⏸ Pausa';
   if (!pausa) document.getElementById('stepBox').classList.remove('visible');
+  if (pausa && window.SFX) SFX.stopWind();
 }
 
 function stepSim() {
@@ -445,6 +455,7 @@ function stepSim() {
 function resetSim() {
   tiempo = 0; px = 0; py = y0ini; landado = false;
   pausa  = false;
+  if (window.SFX) SFX.stopWind();
   document.getElementById('btnPausa').textContent = '⏸ Pausa';
   document.getElementById('stepBox').classList.remove('visible');
   trayectoria = [{ x:0, y:y0ini }];
@@ -602,6 +613,7 @@ function verificar() {
     })
   });
 </script>
+<script src="../core/audio.js"></script>
 <script src="../core/cursor.js"></script>
 </body>
 </html>
