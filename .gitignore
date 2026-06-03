@@ -1,2 +1,12 @@
-# API keys — NO subir
+# ─── Credenciales y secretos ─────────────────────────────────────────────────
+# ⚠️  NUNCA subas claves de API a Git
 core/env.js
+assets/js/env.js
+.env
+.env.local
+.env.*.local
+
+# ─── Build / Temp ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyc
