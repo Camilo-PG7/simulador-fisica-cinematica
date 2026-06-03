@@ -1,223 +1,176 @@
-# 🔬 Simulador de Física — Cinemática
+<h1 align="center">
+  🔬 Simulador de Física — Cinemática
+</h1>
 
-<div align="center">
+<p align="center">
+  <strong>Laboratorio virtual interactivo para el estudio de movimientos cinemáticos</strong><br>
+  Física precisa • Gráficas en tiempo real • Análisis vectorial • IA integrada
+</p>
 
-![Version](https://img.shields.io/badge/versión-2.0.0-00e5ff?style=flat-square&labelColor=0d1120)
-![Stack](https://img.shields.io/badge/stack-vanilla%20JS-a3ff6b?style=flat-square&labelColor=0d1120)
-![Motor](https://img.shields.io/badge/motor-p5.js%201.6-ff3c6e?style=flat-square&labelColor=0d1120)
-![Gráficas](https://img.shields.io/badge/gráficas-Chart.js-ffb830?style=flat-square&labelColor=0d1120)
-![Sin build](https://img.shields.io/badge/build%20step-ninguno-00e5ff?style=flat-square&labelColor=0d1120)
+<p align="center">
+  <img src="https://img.shields.io/badge/p5.js-ED225D?style=for-the-badge&logo=p5dotjs&logoColor=white" alt="p5.js"/>
+  <img src="https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chart.js&logoColor=white" alt="Chart.js"/>
+  <img src="https://img.shields.io/badge/Web%20Audio%20API-0066cc?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Web Audio"/>
+  <img src="https://img.shields.io/badge/Gemini%20AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini AI"/>
+  <img src="https://img.shields.io/badge/Vanilla%20CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3"/>
+</p>
 
-**Cuatro simulaciones interactivas de cinemática con física precisa, gráficas en tiempo real y visualización vectorial.**
-
-</div>
+<p align="center">
+  <a href="http://camilo-pg7.github.io/simulador-fisica-cinematica">🚀 Ver demo en vivo</a> •
+  <a href="#simuladores">📋 Simuladores</a> •
+  <a href="#instalacion">⚙️ Instalación</a> •
+  <a href="#estructura">📂 Estructura</a>
+</p>
 
 ---
 
-## 🧪 Simuladores incluidos
+## ✨ Características principales
 
-| Simulador                | Descripción                                                | Fórmula principal            |
-| ------------------------ | ---------------------------------------------------------- | ---------------------------- |
-| ⚡ **MRU + MCU**          | Movimiento rectilíneo con transición automática a circular | `x = x₀ + v·t` · `ac = v²/r` |
-| 🚀 **MUA**                | Movimiento uniformemente acelerado con gráficas dinámicas  | `x = x₀ + v₀t + ½at²`        |
-| 🔩 **MUA + Fricción**     | MUA con masa, fricción cinética y vectores de fuerza       | `F_neta = F_a − μmg`         |
-| 📐 **Movimiento Variado** | Aceleración dependiente del tiempo con cálculo simbólico   | `a(t) = f(t)`                |
+| Característica | Descripción |
+|---|---|
+| 🎯 **9 Simuladores** | MRU, MUA, Fricción, Proyectil, Péndulo, Atwood, Plano inclinado y más |
+| 📊 **Gráficas en tiempo real** | Chart.js con zoom interactivo y exportación CSV |
+| 🤖 **Chatbot IA** | Asistente educativo con Gemini API integrado |
+| 🔊 **SFX Procedural** | Motor de sonido sintetizado con Web Audio API |
+| 🎨 **Diseño Premium** | Glassmorphism, animaciones fluidas, tema oscuro neon |
+| 📱 **Responsive** | Adaptado para desktop, tablet y móvil |
+| 🔗 **URLs compartibles** | Parámetros guardados en la URL para compartir configuraciones |
+| 📐 **Análisis vectorial** | Vectores de fuerza, velocidad y aceleración en tiempo real |
 
 ---
 
-## 🚀 Instalación y ejecución
+## 🖥️ Capturas de pantalla
 
-> ⚠️ **Importante:** no abrir `index.html` directamente como `file://`. Los simuladores usan scripts externos que requieren un servidor HTTP por restricciones CORS del navegador.
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>🏠 Menú Principal</strong><br>
+      <em>Tarjetas animadas con micro-interacciones por hover</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>🎯 Tiro Parabólico</strong><br>
+      <em>Trayectoria, vectores Vx/Vy y sonido de viento dinámico</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>⚖️ Máquina de Atwood</strong><br>
+      <em>Física de tensión y aceleración, gráficas v(t) y x(t)</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>🚀 MUA con vectores</strong><br>
+      <em>Aceleración constante con análisis de fuerzas</em>
+    </td>
+  </tr>
+</table>
 
-### Opción A — Python (recomendado, sin dependencias)
+---
 
+## 📋 Simuladores
+
+### 🔵 Simuladores Clásicos
+| # | Simulador | Descripción |
+|---|---|---|
+| 1 | **MRU + MCU** | Transición de movimiento rectilíneo a circular uniforme |
+| 2 | **MUA** | Movimiento uniformemente acelerado con vectores de fuerza |
+| 3 | **MUA + Fricción** | Masa con coeficiente de rozamiento cinético |
+| 4 | **Movimiento Variado** | Aceleración dependiente del tiempo con cálculo simbólico |
+
+### 🟢 Nuevos Simuladores
+| # | Simulador | Descripción |
+|---|---|---|
+| 5 | **Tiro Parabólico** | Proyectil con v₀ y ángulo ajustables, trayectoria y vectores |
+| 6 | **Plano Inclinado** | Caja sobre rampa con vectores Peso, Normal, Fricción y F. neta |
+| 7 | **Péndulo Simple** | Oscilación con longitud y ángulo ajustable, periodo calculado |
+| 8 | **Máquina de Atwood** | Sistema de masas conectadas por polea, tensión y aceleración |
+| 9 | **Caja en Vehículo** | Deslizamiento por inercia con fricción estática y cinética |
+
+---
+
+## ⚙️ Instalación
+
+### Opción 1 — Servidor local (Python)
 ```bash
-cd simulador_fisica
+# Clonar el repositorio
+git clone https://github.com/Camilo-PG7/simulador-fisica-cinematica.git
+cd simulador-fisica-cinematica
+
+# Iniciar servidor local
 python -m http.server 8080
-# → Abrir: http://localhost:8080
+
+# Abrir en el navegador
+# http://localhost:8080
 ```
 
-### Opción B — Node.js
+### Opción 2 — Live Server (VS Code)
+1. Instala la extensión **Live Server** en VS Code
+2. Abre el proyecto y haz clic en `Go Live`
 
-```bash
-npx serve .
-# o
-npx http-server . -p 8080
-```
-
-### Opción C — VS Code Live Server
-
-1. Instalar la extensión **Live Server** de Ritwick Dey
-2. `File → Open Folder` → seleccionar la carpeta del proyecto
-3. Click derecho en `index.html` → **"Open with Live Server"**
-
----
-
-## 🤖 Chatbot Educativo con IA y Motor de Física Local
-
-El simulador incorpora un **Asistente de Física Inteligente** integrado (widget flotante 💬 en la esquina inferior derecha) disponible en todos los simuladores. 
-
-Este asistente analiza el estado físico de tu simulación en tiempo real (masa, aceleración, velocidad, ángulos, coeficientes de fricción) y responde tus dudas de forma didáctica.
-
-### 🌐 Funcionamiento Dual: Online & Offline
-
-1. **Modo Online (AI Studio):** Utiliza la API de **Google Gemini 2.0 Flash** para dar explicaciones dinámicas y responder dudas generales.
-2. **Modo Respaldo Local (Offline Fallback):** Si la API no está configurada, no tienes internet, o la cuota está agotada (**error 429**), el chatbot conmuta automáticamente al **Motor de Física Local**. Te dará explicaciones detalladas y cálculos numéricos exactos de las ecuaciones basados en el estado actual de tu simulación.
-
----
-
-### 🔑 Configuración del API Key de Gemini
-
-Para habilitar el chatbot en su modo completo de Inteligencia Artificial (Online):
-1. Obtén una clave de API gratuita en [Google AI Studio](https://aistudio.google.com/apikey).
-2. Abre el archivo `core/env.js` en tu editor:
-   ```javascript
-   const GEMINI_API_KEY = 'TU_API_KEY_AQUI';
-   ```
-3. Guarda el archivo. *(Nota: El archivo `core/env.js` ya está configurado en `.gitignore` para que tu clave nunca se publique en repositorios públicos)*.
-
----
-
-### 🛠️ Solución de Errores de Cuota Agotada (Error 429 / limit: 0)
-
-Si el chatbot muestra el indicador `💡 Asistente Local` y la consola muestra un error `429 (RESOURCE_EXHAUSTED - Limit: 0)`, significa que Google AI Studio ha restringido la cuota de tu clave de API a cero. Sigue estos pasos para solucionarlo:
-
-* **Paso A — Usar una Cuenta de Google Alternativa:** 
-  Google restringe la cuota en ciertas cuentas debido al país de registro o historial del proyecto de Google Cloud. La solución más rápida es abrir [aistudio.google.com](https://aistudio.google.com) usando otra cuenta de Google (cuenta personal antigua, o institucional) y crear una nueva clave.
-* **Paso B — Habilitar la Facturación (Pay-as-you-go):**
-  Si estás usando la consola de Google Cloud, asocia un método de pago a tu proyecto. Esto desbloquea cuotas de pago inmediatas. Para uso de desarrollo y académico, las tarifas de Gemini 2.0 Flash son de millonésimas de centavo por petición (gastarás menos de un centavo por cientos de preguntas).
-* **Paso C — Desactivar VPN:**
-  Google restringe el acceso al plan gratuito si detecta conexiones desde regiones no soportadas o IPs de VPNs compartidas comerciales. Apaga tu VPN y vuelve a intentar.
-
----
-
-
----
-
-## 📁 Estructura del proyecto
-
-```
-simulador_fisica/
-│
-├── index.html                  ← Menú principal (Welcome + navegación)
-├── main.js                     ← Controlador de pantallas
-├── state.js                    ← Estado global de la aplicación
-├── README.md                   ← Este archivo
-│
-└── simulators/
-    ├── mru+mcu_simulacion.html ← Simulador MRU → MCU
-    ├── mua_simulacion.html     ← Simulador MUA
-    ├── mua_friccion.html       ← Simulador MUA + Fricción
-    └── movimiento_variado.html ← Simulador Movimiento Variado
-```
-
-Cada simulador es una página HTML independiente con su propia lógica, controles y gráficas — no requieren módulos compartidos entre sí.
-
----
-
-## 🐛 Bug corregido — MRU/MCU
-
-### Síntoma
-Al entrar al tramo circular, el objeto se **congelaba**. El loop de p5 seguía corriendo pero la posición no se actualizaba.
-
-### Causa raíz
-
+### Configurar el Chatbot IA (Opcional)
+1. Obtén tu API Key gratuita en [Google AI Studio](https://aistudio.google.com/apikey)
+2. Edita el archivo `assets/js/env.js` (ya está en `.gitignore`, es seguro):
 ```js
-// ❌ ORIGINAL — ROTO
-distancia = velocidad * (tiempo / 60); // cálculo por frames, no por tiempo real
-if (distancia >= 100) {
-  modoCircular = true;
-  distancia = 100;  // se fija en 100 PARA SIEMPRE → condición vuelve a entrar cada frame
-}
-tiempo++;
-```
-
-### Solución
-
-```js
-// ✅ CORREGIDO
-const dt = p.deltaTime / 1000;              // segundos reales (nunca 0)
-_state.distancia += _params.velocidad * dt;  // Δx = v·dt (incremental)
-
-if (_state.distancia >= PISTA_LENGTH_M) {
-  _state.modoCircular = true;               // se setea UNA sola vez
-  _state.angulo = Math.PI;                  // ángulo de entrada correcto
-}
-
-// En modo circular:
-_state.angulo += (_params.velocidad / RADIO_PX) * dt; // crece sin condiciones de corte
-```
-
-**Garantías:** `deltaTime` nunca es 0, el flag `modoCircular` se setea una sola vez y el ángulo se acumula indefinidamente.
-
----
-
-## ⚙️ Correcciones físicas
-
-### MUA — Precisión numérica
-
-|                     | Antes                                 | Después                               |
-| ------------------- | ------------------------------------- | ------------------------------------- |
-| Cálculo de posición | Integración frame-a-frame `x += v·dt` | Fórmula cerrada: `x = v₀·t + ½·a·t²`  |
-| Error acumulado     | Crece con el tiempo (Euler)           | Cero — la fórmula analítica es exacta |
-
-### MUA con Fricción — Modelo de fuerzas
-
-| Problema                       | Corrección                                           | Impacto                                                       |
-| ------------------------------ | ---------------------------------------------------- | ------------------------------------------------------------- |
-| Sin cutoff estático            | Si `\|F_aplic\| ≤ F_f` y `v ≈ 0` → `F_neta = 0`      | El objeto no arranca si la fricción supera la fuerza aplicada |
-| Fricción invertía la velocidad | Si `v` cruzaría cero sin fuerza suficiente → `v = 0` | Previene violación de la Segunda Ley de Newton                |
-
----
-
-## 📐 Fórmulas implementadas
-
-### MRU + MCU
-
-```
-x(t) = x₀ + v·t
-ac   = v² / r      ω = v / r      θ(t) = θ₀ + ω·t
-```
-
-### MUA
-
-```
-x(t) = x₀ + v₀·t + ½·a·t²
-v(t) = v₀ + a·t
-```
-
-### MUA con Fricción
-
-```
-F_f    = μ·m·g
-F_neta = F_aplic − sgn(v)·F_f
-a_neta = F_neta / m
-```
-
-### Movimiento Variado
-
-```
-a(t) = f(t)          (función definida por el usuario)
-v(t) = ∫ a(t) dt
-x(t) = ∫ v(t) dt
+const GEMINI_API_KEY = 'tu-api-key-aqui';
 ```
 
 ---
 
-## 🎨 Stack tecnológico
+## 📂 Estructura del Proyecto
 
-| Tecnología            | Rol                                                                        |
-| --------------------- | -------------------------------------------------------------------------- |
-| HTML5 + CSS3 + JS     | Frontend sin build step — abre con `python3 -m http.server`                |
-| **p5.js 1.6**         | Motor de animación canvas con `deltaTime` real vía `requestAnimationFrame` |
-| **Chart.js 4**        | Gráficas dinámicas con ventana deslizante                                  |
-| **MathJax 3**         | Renderizado de fórmulas en Movimiento Variado                              |
-| **Syne + Space Mono** | Tipografía técnica sin ser genérica                                        |
+```
+simulador-fisica-cinematica/
+│
+├── 📁 assets/
+│   ├── 📁 css/
+│   │   ├── 🎨 chatbot.css        # Estilos del chatbot IA
+│   │   └── 🎨 sim-shared.css     # Sistema de diseño compartido
+│   └── 📁 js/
+│       ├── 📄 audio.js           # Motor SFX (Web Audio API)
+│       ├── 📄 chatbot.js         # Integración Gemini AI
+│       ├── 📄 chatbot_offline.js # Modo sin conexión
+│       ├── 📄 cursor.js          # Cursor personalizado
+│       ├── 📄 env.js             # API Keys (⚠️ no subir a Git)
+│       ├── 📄 main.js            # Lógica principal del índice
+│       └── 📄 state.js           # Gestión de estado global
+│
+├── 📁 simulators/
+│   ├── 🌐 mru+mcu_simulacion.html
+│   ├── 🌐 mua_simulacion.html
+│   ├── 🌐 mua_friccion.html
+│   ├── 🌐 movimiento_variado.html
+│   ├── 🌐 tiro_parabolico.html
+│   ├── 🌐 plano_inclinado.html
+│   ├── 🌐 pendulo_simple.html
+│   ├── 🌐 atwood.html
+│   └── 🌐 caja_vehiculo.html
+│
+├── 🌐 index.html                 # Punto de entrada principal
+├── 🖼️ favicon.svg               # Ícono de la pestaña del navegador
+├── 📝 README.md
+└── ⚙️ .gitignore
+```
 
 ---
 
-<div align="center">
+## 🛠️ Tecnologías
 
-Hecho con **p5.js** · **Chart.js** · **MathJax** · **Vanilla JS**
+- **[p5.js](https://p5js.org/)** — Motor de animación y canvas para la física
+- **[Chart.js](https://www.chartjs.org/)** — Gráficas en tiempo real con zoom interactivo
+- **[Google Gemini API](https://aistudio.google.com/)** — Chatbot educativo con IA
+- **[MathJax](https://www.mathjax.org/)** — Renderizado de ecuaciones matemáticas
+- **Web Audio API** — Motor de sonido procedural (SFX)
+- **[Google Fonts](https://fonts.google.com/)** — Tipografías *Syne* y *Space Mono*
 
-</div>
+---
+
+## 👨‍💻 Autor
+
+**Camilo PG7**  
+Proyecto académico — Simulador Interactivo de Física Cinemática  
+*Semestre VI — Artículo Científico*
+
+---
+
+<p align="center">
+  Hecho con ❤️ para la enseñanza de la física
+</p>

@@ -601,6 +601,8 @@ button.sim-btn:active { transform: scale(0.96); }
 .status-warning { background: rgba(255,60,110,0.12);  color: var(--accent2); border: 1px solid rgba(255,60,110,0.3); }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
+
+/* Tablet (800px and below) */
 @media (max-width: 800px) {
   :root {
     --panel-w: calc(100vw - 24px);
@@ -612,14 +614,14 @@ button.sim-btn:active { transform: scale(0.96); }
     top: auto; left: auto; right: auto;
     width: 100%;
     max-height: none;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    margin-bottom: 2px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin: 8px 12px;
+    width: calc(100% - 24px);
   }
 
   .simulation-area {
-    padding-top: 0;
+    padding-top: 54px; /* space for fixed back button */
     display: flex;
     flex-direction: column;
   }
@@ -628,8 +630,21 @@ button.sim-btn:active { transform: scale(0.96); }
   .panels-wrapper {
     display: flex;
     flex-direction: column;
-    background: var(--surface);
+    gap: 0;
+    background: var(--bg);
+    padding-bottom: 8px;
     border-bottom: 1px solid var(--border);
+  }
+
+  /* Panels side-by-side on tablet */
+  @media (min-width: 540px) {
+    .panels-wrapper {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .controls, .data-panel {
+      flex: 1 1 44%;
+    }
   }
 
   .simulation-container {
@@ -644,12 +659,87 @@ button.sim-btn:active { transform: scale(0.96); }
 
   .graficas-container {
     padding: 0 10px;
+    grid-template-columns: 1fr;
+  }
+
+  /* Verification section full width */
+  .verificacion-card {
+    padding: 14px 16px;
+  }
+  .respuesta-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .respuesta-input {
+    max-width: 100%;
   }
 }
 
+/* Mobile (480px and below) */
 @media (max-width: 480px) {
+  :root {
+    --panel-w: calc(100vw - 16px);
+    --data-w:  calc(100vw - 16px);
+  }
+
+  .controls, .data-panel {
+    margin: 6px 8px;
+    width: calc(100% - 16px);
+    padding: 12px;
+  }
+
+  /* Compact param groups */
+  .param-group { margin-bottom: 10px; }
+  .param-label { font-size: 0.62rem; }
+  .param-value { font-size: 0.66rem; }
+
+  /* Compact data rows */
+  .data-key  { font-size: 0.62rem; }
+  .data-val  { font-size: 0.72rem; }
+
+  /* Larger touch targets for buttons */
+  button.sim-btn {
+    padding: 10px 4px;
+    font-size: 10px;
+  }
+
+  /* Larger sliders for touch */
+  input[type="range"] {
+    height: 6px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px; height: 20px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px;
+  }
+
   .grafica-wrapper { padding: 10px; }
   .equation { font-size: 0.7rem; }
+  .grafica-content { height: clamp(130px, 24vh, 200px); }
+
+  /* Back button smaller */
+  #btnVolver {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
+
+  /* Mute button repositioned */
+  .btn-mute {
+    top: 8px !important;
+    right: 8px !important;
+    font-size: 0.62rem !important;
+    padding: 4px 8px !important;
+  }
+
+  .verificacion-section {
+    padding: 0 8px 16px;
+  }
+  .verificacion-card {
+    padding: 12px;
+    border-radius: 8px;
+  }
+  .pregunta-text { font-size: 0.85rem; }
 }
 
 /* ── Entrance Animations & Cascaded Staggers ─────────────────────── */

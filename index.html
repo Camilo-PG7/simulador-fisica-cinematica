@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulador de Física — Cinemática Interactiva</title>
@@ -341,9 +343,53 @@ body::before{
 .btn-clear-hist:hover{ color:var(--accent2); border-color:var(--accent2); }
 
 /* ── Responsive ── */
-@media(max-width:600px){
-  .welcome-stats{ gap:20px; }
-  .sim-cards{ grid-template-columns:1fr; }
+
+/* Tablet */
+@media(max-width: 768px) {
+  .welcome-title { font-size: clamp(2rem, 10vw, 3.5rem); }
+  .welcome-stats { gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .stat-num { font-size: 1.3rem; }
+
+  .menu-header h1 { font-size: clamp(1.4rem, 6vw, 2rem); }
+  .sim-cards { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; padding: 0 12px; }
+  
+  .btn-back-top { font-size: 11px; padding: 6px 14px; }
+
+  /* Mute button on mobile */
+  .btn-mute {
+    top: 12px !important;
+    right: 12px !important;
+    font-size: 0.65rem !important;
+    padding: 5px 10px !important;
+  }
+}
+
+/* Mobile */
+@media(max-width: 480px) {
+  .welcome-stats { gap: 16px; }
+  .welcome-subtitle { font-size: 0.82rem; padding: 0 8px; }
+  .sim-cards { grid-template-columns: 1fr; padding: 0 8px; gap: 10px; }
+
+  .sim-card { padding: 18px 16px; }
+  .card-icon { font-size: 1.8rem; }
+  .card-title { font-size: 1rem; }
+  .card-desc { font-size: 0.78rem; }
+
+  .section-label { font-size: 0.6rem; padding: 0 8px; }
+  .menu-header { padding: 0 8px; }
+
+  /* History section */
+  .historial-section { padding: 16px 8px 0; }
+  .hist-item { padding: 8px 12px; }
+  .hist-name { font-size: 0.7rem; }
+  .hist-time { font-size: 0.58rem; }
+
+  /* Stat numbers */
+  .stat-num { font-size: 1.2rem; }
+  .stat-label { font-size: 0.65rem; }
+
+  /* Welcome button */
+  .btn-primary { padding: 12px 28px; font-size: 0.85rem; }
 }
 
 
