@@ -1,25 +1,19 @@
 /**
- * audio.js — Procedural SFX Engine v5 (Web Audio API)
+ * audio.js — Procedural SFX Engine v6 (Web Audio API)
  *
- * Complete rewrite for maximum reliability.
- *
- * ROOT CAUSE OF PREVIOUS FAILURES:
- *   1. Gesture listeners were on `document.body` which might not exist when
- *      the script loads, causing all event registrations to silently fail.
- *   2. `_autoResume()` called `ctx.resume()` from physics loops (non-gesture
- *      code). Browsers IGNORE resume() calls outside real user gestures,
- *      so the context stayed suspended forever.
- *   3. HTML files cached the old version via `?v=4` query parameter.
- *
- * DESIGN PRINCIPLES OF THIS VERSION:
- *   - Boot IMMEDIATELY at script parse time (no DOMContentLoaded dependency).
- *   - All gesture listeners on `document` (always exists, even before <body>).
- *   - `_unlock()` creates + resumes AudioContext ONLY inside real user gestures.
- *   - Public sound API only plays when context is confirmed running; never
- *     tries to schedule nodes on a suspended context.
- *   - Handles tab-switch suspension via visibilitychange.
- *   - try-catch around all Web Audio node creation to prevent exceptions
- *     from crashing the simulation.
+ * Final architecture fix for missing first sounds.
+ * 
+ * THE PROBLEM WITH v5:
+ * The play methods immediately returned if `ctx.state !== 'running'`.
+ * Because `ctx.resume()` is asynchronous, it takes several milliseconds to resolve.
+ * If a click triggered `_unlock()` (which called `resume()`) and then immediately 
+ * triggered `playClick()`, `ctx.state` was still 'suspended', so the sound was 
+ * silently dropped.
+ * 
+ * THE SOLUTION:
+ * Do NOT block sound scheduling if the context is suspended. Web Audio allows 
+ * scheduling nodes on a suspended context. They will simply sit there and play 
+ * perfectly as soon as the `resume()` promise resolves and the clock starts moving.
  */
 
 class SFX {
@@ -27,7 +21,7 @@ class SFX {
   static masterGain = null;
   static isMuted    = localStorage.getItem('sim_muted') === 'true';
 
-  // Wind nodes (continuous sound)
+  // Wind nodes
   static windNode   = null;
   static windGain   = null;
   static windFilter = null;
@@ -35,11 +29,10 @@ class SFX {
   static _booted = false;
 
   // ═══════════════════════════════════════════════════════════════════════
-  //  UNLOCK — called on EVERY user gesture to create/resume AudioContext
+  //  UNLOCK
   // ═══════════════════════════════════════════════════════════════════════
 
   static _unlock() {
-    // 1. Create context if it doesn't exist
     if (!this.ctx) {
       try {
         const AC = window.AudioContext || window.webkitAudioContext;
@@ -54,8 +47,8 @@ class SFX {
       }
     }
 
-    // 2. Resume if suspended (must be inside a gesture handler to work)
-    if (this.ctx.state !== 'running') {
+    // Resume if suspended (browser allows this inside a user gesture)
+    if (this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
   }
@@ -68,21 +61,19 @@ class SFX {
     this.isMuted = !this.isMuted;
     localStorage.setItem('sim_muted', this.isMuted);
 
-    // This is a user gesture → unlock the context
-    this._unlock();
+    this._unlock(); // Ensure context is awake
 
     if (this.masterGain && this.ctx) {
       const target = this.isMuted ? 0 : 0.5;
       try {
         this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.05);
-      } catch(e) { /* ignore */ }
+      } catch(e) {}
     }
 
     if (this.isMuted) {
       this.stopWind();
     } else {
-      // Confirmation beep after un-muting (slight delay for context to activate)
-      requestAnimationFrame(() => this.playClick());
+      this.playClick();
     }
 
     this.updateMuteButtons();
@@ -97,7 +88,7 @@ class SFX {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  //  SOUND PRIMITIVES — wrapped in try-catch, never throw
+  //  SOUND SCHEDULERS
   // ═══════════════════════════════════════════════════════════════════════
 
   static _scheduleHover() {
@@ -115,7 +106,7 @@ class SFX {
       gain.connect(this.masterGain);
       osc.start(t);
       osc.stop(t + 0.12);
-    } catch(e) { /* swallow */ }
+    } catch(e) {}
   }
 
   static _scheduleClick() {
@@ -133,7 +124,7 @@ class SFX {
       gain.connect(this.masterGain);
       osc.start(t);
       osc.stop(t + 0.15);
-    } catch(e) { /* swallow */ }
+    } catch(e) {}
   }
 
   static _scheduleThud(intensity = 1.0) {
@@ -152,31 +143,30 @@ class SFX {
       gain.connect(this.masterGain);
       osc.start(t);
       osc.stop(t + 0.38);
-    } catch(e) { /* swallow */ }
+    } catch(e) {}
   }
 
   // ═══════════════════════════════════════════════════════════════════════
   //  PUBLIC SOUND API
-  //  Only plays when context is confirmed running. Safe to call anytime.
   // ═══════════════════════════════════════════════════════════════════════
 
   static playClick() {
-    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    if (this.isMuted || !this.ctx) return;
     this._scheduleClick();
   }
 
   static playHover() {
-    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    if (this.isMuted || !this.ctx) return;
     this._scheduleHover();
   }
 
   static playThud(intensity = 1.0) {
-    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    if (this.isMuted || !this.ctx) return;
     this._scheduleThud(intensity);
   }
 
   static playWind(velocity) {
-    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    if (this.isMuted || !this.ctx) return;
 
     if (!this.windNode) {
       try {
@@ -210,7 +200,7 @@ class SFX {
       this.windGain.gain.setTargetAtTime(
         clamped > 1 ? Math.min(0.3, clamped * 0.015) : 0, t, 0.1
       );
-    } catch(e) { /* swallow */ }
+    } catch(e) {}
   }
 
   static stopWind() {
@@ -218,41 +208,31 @@ class SFX {
       if (this.windGain && this.ctx) {
         this.windGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
       }
-    } catch(e) { /* swallow */ }
+    } catch(e) {}
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  //  BOOT — called ONCE at script parse time (no DOM dependency)
+  //  BOOT
   // ═══════════════════════════════════════════════════════════════════════
 
   static boot() {
     if (this._booted) return;
     this._booted = true;
 
-    // ── 1. Gesture unlock handler ─────────────────────────────────────
-    //    Called on EVERY user gesture. Creates + resumes AudioContext.
     const onGesture = () => {
-      if (!SFX.isMuted) {
-        SFX._unlock();
-      }
+      if (!SFX.isMuted) SFX._unlock();
     };
 
-    //    Register on `document` (always exists, even before <body> is parsed).
-    //    Using capture phase so we fire before any other handler.
     ['mousedown', 'pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
       document.addEventListener(evt, onGesture, { capture: true, passive: true });
     });
 
-    // ── 2. Interactive element detection (walks up DOM tree) ──────────
     const getInteractive = (el) => {
       let depth = 0;
       while (el && el !== document.body && depth < 10) {
         if (
-          el.tagName === 'BUTTON' ||
-          el.tagName === 'A' ||
-          el.tagName === 'SELECT' ||
-          el.tagName === 'LABEL' ||
-          (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'))
+          el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SELECT' ||
+          el.tagName === 'LABEL' || (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'))
         ) {
           return el;
         }
@@ -262,24 +242,20 @@ class SFX {
       return null;
     };
 
-    // ── 3. Click sound on interactive elements ───────────────────────
-    //    Uses requestAnimationFrame to give _unlock() one frame to
-    //    take effect on the very first interaction after page load.
     document.addEventListener('pointerdown', (e) => {
       if (SFX.isMuted) return;
       if (getInteractive(e.target)) {
-        requestAnimationFrame(() => SFX.playClick());
+        SFX.playClick();
       }
     }, { capture: true, passive: true });
 
-    // ── 4. Hover sounds ──────────────────────────────────────────────
     let lastHoverEl = null;
     document.addEventListener('mouseover', (e) => {
       if (SFX.isMuted) return;
       const interactive = getInteractive(e.target);
-      const paramGroup = (e.target && e.target.classList && e.target.classList.contains('param-group'))
-        ? e.target : null;
+      const paramGroup = (e.target && e.target.classList && e.target.classList.contains('param-group')) ? e.target : null;
       const target = interactive || paramGroup;
+      
       if (target && target !== lastHoverEl) {
         lastHoverEl = target;
         SFX.playHover();
@@ -288,20 +264,12 @@ class SFX {
       }
     }, true);
 
-    // ── 5. Tab visibility handler ────────────────────────────────────
-    //    When the user leaves and returns to the tab, the browser may
-    //    have suspended the AudioContext. We flag it for re-unlock on
-    //    the next gesture.
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && SFX.ctx &&
-          SFX.ctx.state === 'suspended' && !SFX.isMuted) {
-        // Try to resume; may fail outside gesture, but will succeed
-        // on the next click/keydown thanks to the gesture listeners.
+      if (document.visibilityState === 'visible' && SFX.ctx && SFX.ctx.state === 'suspended' && !SFX.isMuted) {
         SFX.ctx.resume().catch(() => {});
       }
     });
 
-    // ── 6. Update mute buttons when DOM is ready ─────────────────────
     const initButtons = () => SFX.updateMuteButtons();
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initButtons);
@@ -311,8 +279,4 @@ class SFX {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  BOOT IMMEDIATELY — do NOT wait for DOMContentLoaded.
-//  `document` always exists at script parse time.
-// ═══════════════════════════════════════════════════════════════════════════════
 SFX.boot();
