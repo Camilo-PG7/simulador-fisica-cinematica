@@ -285,20 +285,31 @@ function mostrarStepEq(){
 
 function dibujarEscena(){
   push();
-  // El plano inclinado bajará de izquierda a derecha.
-  // El ángulo theta estará en la esquina inferior derecha.
-  const rampLen = min(width*0.65, 500);
-  const V1x = width*0.85; 
+  
+  // 1. Cálculo de escala responsiva para que el plano NUNCA se salga de la pantalla
+  const H_max = height * 0.85 - 80; // 80px de margen arriba para la caja
+  const W_max = width * 0.65;       // Ocupar máximo el 65% del ancho
+  
+  // Prevenir división por cero
+  const s = Math.max(Math.sin(angRad), 0.001);
+  const c = Math.max(Math.cos(angRad), 0.001);
+  
+  // La longitud de la rampa se ajusta para no superar W_max ni H_max
+  const rampLen = Math.min(H_max / s, W_max / c);
+  const rWidth = rampLen * c;
+  
+  // Centrar el plano horizontalmente
+  const V1x = width/2 + rWidth/2; 
   const V1y = height*0.85; // Vértice inferior derecho (ángulo theta)
 
-  const V2x = V1x - rampLen * Math.cos(angRad);
-  const V2y = V1y - rampLen * Math.sin(angRad); // Vértice superior izquierdo
+  const V2x = V1x - rWidth;
+  const V2y = V1y - rampLen * s; // Vértice superior izquierdo
   
-  // 1. Dibujar la cuña sólida del plano
+  // 2. Dibujar la cuña sólida del plano
   fill(25,35,50,220); stroke(0,229,255,80); strokeWeight(2);
   triangle(V1x, V1y, V2x, V2y, V2x, V1y);
 
-  // 2. Dibujar el arco del ángulo theta
+  // 3. Dibujar el arco del ángulo theta
   push();
   translate(V1x, V1y);
   noFill(); stroke(255,209,102,150); strokeWeight(1.5);
@@ -307,8 +318,7 @@ function dibujarEscena(){
   text(angDeg+'°', -45, -12);
   pop();
 
-  // 3. Mover el sistema de coordenadas al inicio de la rampa (V2) y rotar
-  // Ahora el eje +X apuntará hacia ABAJO de la rampa.
+  // 4. Mover el sistema de coordenadas al inicio de la rampa (V2) y rotar
   translate(V2x, V2y);
   rotate(angRad);
 
@@ -322,10 +332,11 @@ function dibujarEscena(){
     for(let xi=10;xi<rampLen-10;xi+=20) line(xi,0,xi-8,8);
   }
 
-  // 4. Calcular la posición visual de la caja
-  let cajaPx = posicion*40; // 40 pixeles por metro
-  cajaPx = constrain(cajaPx, 0, rampLen-50);
-  const cajaS=40;
+  // 5. Calcular la posición visual de la caja
+  const scalePx = 50; // 50 pixeles por metro
+  let cajaPx = posicion * scalePx; 
+  cajaPx = constrain(cajaPx, 0, rampLen-40); // 40 es el tamaño de la caja
+  const cajaS = 40;
 
   // Mover la caja a lo largo de la rampa
   translate(cajaPx, 0);
@@ -345,7 +356,7 @@ function dibujarEscena(){
   fill(255); noStroke(); textSize(12); textAlign(CENTER,CENTER); textFont('monospace');
   text(masa.toFixed(0)+'kg', cajaS/2, -cajaS/2);
 
-  // 5. Dibujar los vectores de fuerza (alineados con la caja)
+  // 6. Dibujar los vectores de fuerza
   const cx = cajaS/2, cy = -cajaS/2;
   const sc = 0.8 * 0.25;
   
@@ -361,8 +372,7 @@ function dibujarEscena(){
   // F. Neta (Apunta hacia abajo de la rampa, eje +X local)
   drawVec(cx, cy-cajaS*0.7, fnetaVal*sc, 0, '#00e5ff', 'F_neta');
 
-  // Peso global W (Apunta directamente hacia abajo en el mundo real)
-  // En nuestro sistema rotado, "hacia abajo" tiene componentes en X e Y.
+  // Peso global W 
   const wMag = masa * G * sc;
   drawVec(cx, cy, wMag * Math.sin(angRad), wMag * Math.cos(angRad), '#ffffff', 'W');
 
