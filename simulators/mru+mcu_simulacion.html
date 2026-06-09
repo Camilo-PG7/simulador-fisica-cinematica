@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/png" href="../favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulación MRU + MCU</title>
+  <link rel="stylesheet" href="../assets/css/chatbot.css">
+  <script src="../assets/js/env.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root{
+      --bg:#05070f;--border:rgba(255,255,255,0.08);
+      --accent1:#00e5ff;--accent2:#ff3c6e;--accent3:#a3ff6b;--accent4:#ffd166;
+      --text:#e8ecf8;--muted:#7a85a0;
+      
+      /* Default active theme variables */
+      --theme-accent: var(--accent1);
+      --theme-accent-alpha: rgba(0, 229, 255, 0.08);
+      --theme-accent-alpha-hover: rgba(0, 229, 255, 0.15);
+      --theme-glow: 0 0 30px rgba(0,229,255,0.25);
+    }
+    
+    body.theme-cyan {
+      --theme-accent: var(--accent1);
+      --theme-accent-alpha: rgba(0, 229, 255, 0.08);
+      --theme-accent-alpha-hover: rgba(0, 229, 255, 0.15);
+      --theme-glow: 0 0 30px rgba(0,229,255,0.25);
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+    body {
+      font-family: 'Syne', 'Segoe UI', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before{
+      content:'';position:fixed;inset:0;
+      background-image:linear-gradient(var(--theme-accent-alpha) 1px,transparent 1px),linear-gradient(90deg,var(--theme-accent-alpha) 1px,transparent 1px);
+      background-size:40px 40px;pointer-events:none;z-index:0;
+      animation: scroll-grid 20s linear infinite;
+    }
+    @keyframes scroll-grid {
+      from { background-position: 0 0; }
+      to { background-position: 40px 40px; }
+    }
+
+    /* ── Botón Volver ─────────────────────────────────────────────────── */
+    #btnVolver {
+      position: fixed;
+      top: 14px; left: 14px;
+      z-index: 200;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      background: rgba(8,16,36,0.82);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
+    }
+    #btnVolver:hover {
+      background: var(--theme-accent-alpha-hover); border-color: var(--theme-accent);
+      color: #fff; box-shadow: var(--theme-glow);
+      transform: translateX(-2px);
+    }
+    #btnVolver:active { transform: translateX(-1px) scale(0.97); }
+
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    .main-container {
+      max-width: 1200px; margin: 0 auto; padding: 70px 20px 40px;
+    }
+    h1 {
+      text-align: center; font-size: clamp(1.2em,3vw,1.8em);
+      font-weight: 700; letter-spacing: 0.04em; margin: 0 0 20px;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* ── Formula box ──────────────────────────────────────────────────── */
+    .formula-box {
+      background: rgba(8,16,36,0.7); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 16px 24px; margin: 0 auto 20px;
+      max-width: 620px; text-align: center;
+    }
+    .formula-box h3 {
+      margin: 0 0 10px; font-size: 0.85em; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45);
+    }
+    .formula {
+      font-family: "Times New Roman",Times,serif;
+      font-size: clamp(1em,2.2vw,1.2em); color: rgba(255,255,255,0.9); margin: 6px 0;
+    }
+    .formula-box p { font-size: 0.78em; color: rgba(255,255,255,0.4); margin: 8px 0 0; }
+
+    /* ── Canvas ───────────────────────────────────────────────────────── */
+    .simulacion {
+      background: rgba(8,16,36,0.6); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; margin: 0 auto 24px; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4); width: 100%;
+    }
+    .simulacion canvas { display: block; width: 100% !important; height: auto !important; }
+
+    /* ── Controls ─────────────────────────────────────────────────────── */
+    .controls {
+      background: rgba(8,16,36,0.82); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 16px 20px; max-width: 500px; margin: 0 auto 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .param-group { margin-bottom: 10px; }
+    .param-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .param-label { font-family: 'Space Mono', monospace; font-size: 0.8em; color: rgba(255,255,255,0.7); }
+    .param-value {
+      font-family: 'Space Mono', monospace; font-size: 0.82em; font-weight: 700; color: var(--theme-accent);
+      background: var(--theme-accent-alpha); padding: 1px 8px;
+      border-radius: 4px; min-width: 52px; text-align: right;
+    }
+    input[type="range"] {
+      width: 100%; height: 4px; -webkit-appearance: none; appearance: none;
+      background: rgba(255,255,255,0.15); border-radius: 2px; outline: none;
+      cursor: pointer; margin: 2px 0 0;
+      transition: transform 0.2s, background-color 0.2s;
+    }
+    input[type="range"]:hover {
+      transform: scaleY(1.5);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--theme-accent); box-shadow: 0 0 6px var(--theme-glow); cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    input[type="range"]:hover::-webkit-slider-thumb {
+      transform: scale(1.3);
+      box-shadow: 0 0 14px var(--theme-accent);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%; border: none;
+      background: var(--theme-accent); box-shadow: 0 0 6px var(--theme-glow); cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    input[type="range"]:hover::-moz-range-thumb {
+      transform: scale(1.3);
+      box-shadow: 0 0 14px var(--theme-accent);
+    }
+    .btn-row-mru { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
+    .btn-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 6px; }
+    
+    #btnPausa, #btnStep, #btnReinicio, #btnCSV_MRU, #btnShare_MRU {
+      display: inline-block; padding: 9px 4px; margin-top: 10px;
+      border: none; border-radius: 7px;
+      color: white; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.02em; transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
+      text-align: center;
+    }
+    #btnPausa { background: linear-gradient(135deg,#f9a825,#e65100); }
+    #btnStep { background: linear-gradient(135deg,#00b0ff,#0055aa); }
+    #btnReinicio { background: linear-gradient(135deg,#e53935,#7b0000); }
+    #btnCSV_MRU { background: linear-gradient(135deg,#2e7d32,#1b5e20); margin-top: 6px; }
+    #btnShare_MRU { background: linear-gradient(135deg,#6a1b9a,#311b92); margin-top: 6px; }
+    
+    #btnPausa:hover, #btnStep:hover, #btnReinicio:hover, #btnCSV_MRU:hover, #btnShare_MRU:hover { filter: brightness(1.25); transform: translateY(-1px); box-shadow: var(--theme-glow); }
+    #btnPausa:active, #btnStep:active, #btnReinicio:active, #btnCSV_MRU:active, #btnShare_MRU:active { transform: scale(0.96); }
+    
+    .step-box { margin-top: 10px; background: var(--theme-accent-alpha); border: 1px solid var(--theme-accent-alpha-hover); border-radius: 8px; padding: 8px 10px; display: none; }
+    .step-box.visible { display: block; }
+    .step-eq { font-family: 'Space Mono', monospace; font-size: 0.62rem; color: var(--theme-accent); line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+
+    /* ── Charts ───────────────────────────────────────────────────────── */
+    .chart-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%,320px),1fr));
+      gap: 16px;
+    }
+
+    .chart-wrapper {
+      background: rgba(6,12,28,0.88);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 14px 14px 10px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+      position: relative;
+      transition: box-shadow 0.2s;
+    }
+    .chart-wrapper:hover {
+      box-shadow: 0 10px 36px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    .chart-wrapper.glow-blue  { border-top: 2px solid rgba(79,172,254,0.5); }
+    .chart-wrapper.glow-green { border-top: 2px solid rgba(67,233,190,0.5); }
+    .chart-wrapper.glow-amber { border-top: 2px solid rgba(255,183,77,0.5); }
+
+    .chart-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .chart-title {
+      font-size: 0.76em; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.48);
+    }
+    .chart-badge {
+      font-size: 0.8em; font-weight: 700; font-variant-numeric: tabular-nums;
+      padding: 2px 9px; border-radius: 5px; letter-spacing: 0.02em;
+      transition: color 0.15s;
+    }
+    .badge-blue  { color: #4faaff; background: rgba(79,172,254,0.1); }
+    .badge-green { color: #43e9be; background: rgba(67,233,190,0.1); }
+    .badge-amber { color: #ffb74d; background: rgba(255,183,77,0.1);  }
+
+    .chart-inner { height: clamp(150px,24vh,240px); position: relative; }
+
+    .chart-hint {
+      text-align: center; font-size: 0.65em; color: rgba(255,255,255,0.18);
+      margin-top: 6px; letter-spacing: 0.03em; user-select: none;
+    }
+
+    .zoom-reset {
+      position: absolute; top: 42px; right: 10px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 5px; color: rgba(255,255,255,0.4);
+      font-size: 10px; padding: 2px 7px; cursor: pointer;
+      display: none; transition: background 0.15s, color 0.15s; z-index: 10;
+    }
+    .zoom-reset:hover { background: rgba(255,255,255,0.14); color: white; }
+
+    @media (max-width: 600px) {
+      .main-container { padding: 66px 12px 30px; }
+    }
+
+    /* ── Entrance Animations & Cascaded Staggers ─────────────────────── */
+    @keyframes slide-in-left {
+      from { opacity: 0; transform: translateX(-50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slide-in-right {
+      from { opacity: 0; transform: translateX(50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fade-in-bottom {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .formula-box {
+      animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 0.05s;
+    }
+
+    .simulacion {
+      animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 0.15s;
+    }
+
+    .controls {
+      animation: slide-in-left 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 0.22s;
+    }
+
+    .chart-container {
+      animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: 0.3s;
+    }
+  </style>
+</head>
+<body class="theme-cyan">
+
+<a href="../index.html#menu" id="btnVolver">← Volver</a>
+<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
+
+<div class="main-container">
+  <h1>Simulación MRU + MCU</h1>
+
+  <div class="formula-box">
+    <h3>Fórmulas</h3>
+    <div class="formula">MRU: &nbsp; x = x₀ + v · t</div>
+    <div class="formula">MCU: &nbsp; aᶜ = v² / r &nbsp;|&nbsp; θ(t) = θ₀ + (v/r) · t</div>
+    <p>v = velocidad tangencial &nbsp;·&nbsp; r = radio &nbsp;·&nbsp; aᶜ = aceleración centrípeta</p>
+  </div>
+
+  <div class="simulacion" id="pistaWrapper">
+    <div id="pista"></div>
+  </div>
+
+  <div class="controls">
+    <h3>⚙ Parámetros</h3>
+    <div class="param-group">
+      <div class="param-header">
+        <span class="param-label">Velocidad (m/s)</span>
+        <span class="param-value" id="velocidadDisplay">15 m/s</span>
+      </div>
+      <input type="range" id="velocidad" min="5" max="30" step="1" value="15">
+    </div>
+    <div class="btn-row-3">
+      <button id="btnPausa"    onclick="pausarSimulacion()">⏸ Pausa</button>
+      <button id="btnStep"     onclick="stepSim_MRUMCU()">▶ Step</button>
+      <button id="btnReinicio" onclick="reiniciar()">↺ Reset</button>
+    </div>
+    <div class="btn-row-mru">
+      <button id="btnCSV_MRU"   onclick="exportCSV_MRU()">⬇ CSV</button>
+      <button id="btnShare_MRU" onclick="shareURL_MRU()">🔗 Link</button>
+    </div>
+    <div class="step-box" id="stepBox"><div class="step-eq" id="stepEq">—</div></div>
+  </div>
+
+  <div class="chart-container">
+
+    <div class="chart-wrapper glow-blue">
+      <div class="chart-header">
+        <span class="chart-title">Posición vs Tiempo</span>
+        <span class="chart-badge badge-blue" id="badgePos">— m</span>
+      </div>
+      <div class="chart-inner"><canvas id="chartPos"></canvas></div>
+      <button class="zoom-reset" id="zrPos" onclick="resetZoom('pos')">↺ zoom</button>
+      <div class="chart-hint">scroll para zoom &nbsp;·&nbsp; arrastra para mover</div>
+    </div>
+
+    <div class="chart-wrapper glow-green">
+      <div class="chart-header">
+        <span class="chart-title">Velocidad vs Tiempo</span>
+        <span class="chart-badge badge-green" id="badgeVel">— m/s</span>
+      </div>
+      <div class="chart-inner"><canvas id="chartVel"></canvas></div>
+      <button class="zoom-reset" id="zrVel" onclick="resetZoom('vel')">↺ zoom</button>
+      <div class="chart-hint">scroll para zoom &nbsp;·&nbsp; arrastra para mover</div>
+    </div>
+
+    <div class="chart-wrapper glow-amber">
+      <div class="chart-header">
+        <span class="chart-title">Aceleración Centrípeta vs Tiempo</span>
+        <span class="chart-badge badge-amber" id="badgeAcc">— m/s²</span>
+      </div>
+      <div class="chart-inner"><canvas id="chartAcc"></canvas></div>
+      <button class="zoom-reset" id="zrAcc" onclick="resetZoom('acc')">↺ zoom</button>
+      <div class="chart-hint">scroll para zoom &nbsp;·&nbsp; arrastra para mover</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Plugin: línea vertical de transición MRU→MCU ────────────────────────
+  const pluginCrosshair = {
+    id: 'crosshair',
+    afterDraw(chart) {
+      if (!chart._hoverX) return;
+      const { ctx, chartArea, scales } = chart;
+      const x = chart._hoverX;
+      if (x < chartArea.left || x > chartArea.right) return;
+
+      ctx.save();
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Punto de intersección en la curva
+      const ds = chart.data.datasets[0];
+      const meta = chart.getDatasetMeta(0);
+      if (meta && meta.data && meta.data.length > 0) {
+        // Encontrar el punto más cercano al x del mouse
+        let closest = null, minDist = Infinity;
+        for (const pt of meta.data) {
+          const d = Math.abs(pt.x - x);
+          if (d < minDist) { minDist = d; closest = pt; }
+        }
+        if (closest && minDist < 20) {
+          ctx.beginPath();
+          ctx.arc(closest.x, closest.y, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = chart.data.datasets[0].borderColor;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+  };
+
+  // ── Plugin: línea vertical de transición MRU→MCU ────────────────────────
+  const pluginLineaTransicion = {
+    id: 'lineaTransicion',
+    afterDraw(chart) {
+      if (!chart._transicionX) return;
+      const xPx = chart.scales.x.getPixelForValue(chart._transicionX);
+      if (xPx < chart.chartArea.left || xPx > chart.chartArea.right) return;
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = 'rgba(255,200,80,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(xPx, chart.chartArea.top);
+      ctx.lineTo(xPx, chart.chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '600 9px Segoe UI, Arial, sans-serif';
+      const txt = '⟳ MCU';
+      const tw = ctx.measureText(txt).width;
+      const lx = xPx + 5, ly = chart.chartArea.top + 14;
+      ctx.fillStyle = 'rgba(10,18,40,0.8)';
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(lx - 3, ly - 11, tw + 6, 15, 3);
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,200,80,0.95)';
+      ctx.fillText(txt, lx, ly);
+      ctx.restore();
+    }
+  };
+  Chart.register(pluginCrosshair);
+  Chart.register(pluginLineaTransicion);
+
+  // ── Estado global ───────────────────────────────────────────────────────
+  let velocidad = 15;
+  let radio;
+  let tiempoFisico = 0;
+  const DIST_MRU = 100;
+  const T_TRANSICION = 0.4;
+  let fase = 'MRU';
+  let tFaseInicio = 0;
+  let distanciaMRU = 0;
+  let anguloMCU = Math.PI;
+  let tMCUInicio = 0;
+  let acCentripeta = 0;
+  let trail = [];
+  let chartPos, chartVel, chartAcc;
+
+  // ── Dimensiones dinámicas ────────────────────────────────────────────────
+  let cnv, W, H;
+  let PISTA_Y, PISTA_X0, CENTRO_X, CENTRO_Y, PISTA_PX, ESCALA;
+
+  function calcularDimensiones() {
+    const wrapper = document.getElementById('pistaWrapper');
+    W = Math.max(wrapper.clientWidth, 300);
+    H = Math.max(Math.round(W * 0.36), 240);
+    radio    = Math.round(H * 0.29);
+    PISTA_Y  = H / 2;
+    PISTA_X0 = Math.round(W * 0.05);
+    CENTRO_X = W - Math.round(W * 0.06) - radio;
+    CENTRO_Y = PISTA_Y;
+    PISTA_PX = (CENTRO_X - radio) - PISTA_X0;
+    ESCALA   = PISTA_PX / DIST_MRU;
+  }
+
+  let pausa = false;
+  let stepPending = false;
+
+  function setup() {
+    calcularDimensiones();
+    cnv = createCanvas(W, H);
+    cnv.parent('pista');
+    frameRate(60);
+    crearGraficas();
+    document.getElementById('velocidad').addEventListener('input', function () {
+      velocidad = parseFloat(this.value);
+      document.getElementById('velocidadDisplay').textContent = velocidad + ' m/s';
+      reiniciar();
+    });
+  }
+
+  function windowResized() {
+    calcularDimensiones();
+    resizeCanvas(W, H);
+    reiniciar();
+    [chartPos, chartVel, chartAcc].forEach(c => c.resize());
+  }
+
+  function draw() {
+    let dt = 0;
+    if (!pausa || stepPending) {
+      dt = stepPending ? (1/60) : Math.min(deltaTime / 1000, 0.05);
+      tiempoFisico += dt;
+    }
+    background(14, 22, 42);
+    dibujarEscenario();
+    if (!pausa || stepPending) {
+      actualizarFisica(dt);
+    }
+    dibujarTrail();
+    dibujarCarrito();
+    dibujarHUD();
+    if (!pausa || stepPending) {
+      actualizarGraficas();
+    }
+    stepPending = false;
+  }
+
+  // ── Escenario ────────────────────────────────────────────────────────────
+  function dibujarEscenario() {
+    noFill(); stroke(255,255,255,18); strokeWeight(1);
+    for (let i = 0; i <= 6; i++) {
+      const x = map(i, 0, 6, PISTA_X0, CENTRO_X - radio);
+      line(x, PISTA_Y+22, x, PISTA_Y+28);
+    }
+    noStroke(); fill(30,32,38);
+    rect(PISTA_X0, PISTA_Y+10, PISTA_PX, 18, 3);
+
+    stroke(255,220,0,160); strokeWeight(2.5);
+    const offsetLane = (distanciaMRU * ESCALA) % 36;
+    for (let x = PISTA_X0 - offsetLane; x < CENTRO_X - radio; x += 36) {
+      line(x+2, PISTA_Y+19, x+18, PISTA_Y+19);
+    }
+    stroke(255,255,255,80); strokeWeight(1.5);
+    line(PISTA_X0, PISTA_Y+10, CENTRO_X-radio, PISTA_Y+10);
+    line(PISTA_X0, PISTA_Y+28, CENTRO_X-radio, PISTA_Y+28);
+
+    noFill(); stroke(255,255,255,14); strokeWeight(20);
+    circle(CENTRO_X, CENTRO_Y, radio*2);
+    stroke(255,255,255,55); strokeWeight(1.5);
+    circle(CENTRO_X, CENTRO_Y, radio*2);
+    stroke(255,255,255,30); strokeWeight(1);
+    line(CENTRO_X-6, CENTRO_Y, CENTRO_X+6, CENTRO_Y);
+    line(CENTRO_X, CENTRO_Y-6, CENTRO_X, CENTRO_Y+6);
+    noStroke(); fill(255,200,60,120);
+    circle(CENTRO_X-radio, CENTRO_Y, 7);
+  }
+
+  // ── Física ────────────────────────────────────────────────────────────────
+  function actualizarFisica(dt) {
+    if (fase === 'MRU') {
+      distanciaMRU += velocidad * dt;
+      acCentripeta = 0;
+      if (distanciaMRU >= DIST_MRU) {
+        distanciaMRU = DIST_MRU;
+        fase = 'TRANSICION';
+        tFaseInicio = tiempoFisico;
+        anguloMCU = Math.PI;
+        tMCUInicio = tiempoFisico;
+        // Inyectar línea de transición en gráficas
+        const tMarca = tiempoFisico.toFixed(2);
+        [chartPos, chartVel, chartAcc].forEach(c => { c._transicionX = tMarca; });
+      }
+    } else if (fase === 'TRANSICION') {
+      const trans = tiempoFisico - tFaseInicio;
+      const p = Math.min(trans / T_TRANSICION, 1);
+      const ease = p*p*(3 - 2*p);
+      acCentripeta = ease * (velocidad*velocidad) / radio;
+      anguloMCU = Math.PI - (velocidad/radio) * (tiempoFisico - tMCUInicio);
+      if (trans >= T_TRANSICION) fase = 'MCU';
+    } else {
+      anguloMCU = Math.PI - (velocidad/radio) * (tiempoFisico - tMCUInicio);
+      acCentripeta = (velocidad*velocidad) / radio;
+    }
+  }
+
+  function getPosicion() {
+    if (fase === 'MRU') return { x: PISTA_X0 + distanciaMRU*ESCALA, y: PISTA_Y };
+    return { x: CENTRO_X + radio*Math.cos(anguloMCU), y: CENTRO_Y + radio*Math.sin(anguloMCU) };
+  }
+
+  // ── Trail ─────────────────────────────────────────────────────────────────
+  function dibujarTrail() {
+    const pos = getPosicion();
+    trail.push({ x: pos.x, y: pos.y });
+    if (trail.length > 80) trail.shift();
+    noStroke();
+    for (let i = 0; i < trail.length; i++) {
+      const t = i / trail.length;
+      fill(lerp(60,100,t), lerp(160,220,t), lerp(220,255,t), t*160);
+      circle(trail[i].x, trail[i].y, lerp(2,6,t));
+    }
+  }
+
+  // ── Carrito ───────────────────────────────────────────────────────────────
+  function dibujarCarrito() {
+    const pos = getPosicion();
+    const s = 52;
+    const angRot = fase === 'MRU' ? 0 : anguloMCU - Math.PI/2;
+
+    push();
+    translate(pos.x - s/2, pos.y - s/2);
+    rotate(angRot, { x: s/2, y: s/2 });
+
+    noStroke(); fill(0,0,0,50);
+    ellipse(s/2+3, s/2+5, s*0.85, 12);
+
+    for (let i = 0; i <= 10; i++) {
+      const t = i/10;
+      fill(lerp(255,180,t), lerp(60,20,t), lerp(60,20,t)); noStroke();
+      beginShape();
+      vertex(lerp(0,2,t),         s/2);
+      vertex(lerp(s*.2,s*.21,t),  s/3);
+      vertex(lerp(s*.3,s*.32,t),  s/4+t*2);
+      vertex(lerp(s*.7,s*.68,t),  s/4+t*2);
+      vertex(lerp(s*.8,s*.79,t),  s/3);
+      vertex(lerp(s,s-2,t),       s/2);
+      endShape(CLOSE);
+    }
+
+    fill(200,30,30); noStroke();
+    rect(s*.06, s/4-3, s*.05, 9, 1);
+    fill(220,50,50);
+    rect(s*.02, s/4-5, s*.22, 4, 2);
+
+    fill(40,40,50); noStroke();
+    beginShape();
+    vertex(s*.3,s/3); vertex(s*.38,s/6); vertex(s*.62,s/6); vertex(s*.7,s/3);
+    endShape(CLOSE);
+    fill(80,160,220,170);
+    beginShape();
+    vertex(s*.33,s/3-1); vertex(s*.4,s/6+2); vertex(s*.6,s/6+2); vertex(s*.67,s/3-1);
+    endShape(CLOSE);
+    fill(255,255,255,55);
+    beginShape();
+    vertex(s*.35,s/3-2); vertex(s*.41,s/6+3); vertex(s*.47,s/6+3); vertex(s*.42,s/3-2);
+    endShape(CLOSE);
+
+    fill(255,255,200); noStroke();
+    rect(s*.88,s/3,s*.09,s*.08,2);
+    fill(255,255,255,190); ellipse(s*.91,s/3+2,3.5,3.5);
+    fill(220,30,30); rect(s*.02,s/3,s*.08,s*.08,2);
+
+    const ruedas = [s*.18, s*.78];
+    const angRueda = frameCount * 0.08;
+    for (const rx of ruedas) {
+      fill(0,0,0,70); noStroke(); ellipse(rx+2,s/2+2,s*.2,s*.2);
+      fill(22,22,26); noStroke(); ellipse(rx,s/2,s*.2,s*.2);
+      fill(155,160,170); ellipse(rx,s/2,s*.11,s*.11);
+      stroke(110,115,125); strokeWeight(1.5);
+      for (let r = 0; r < 5; r++) {
+        const a = angRueda + r*TWO_PI/5;
+        line(rx,s/2, rx+cos(a)*s*.045, s/2+sin(a)*s*.045);
+      }
+      noStroke(); fill(195,200,210); ellipse(rx,s/2,s*.045,s*.045);
+    }
+
+    const vLen = constrain(velocidad*2.2, 20, 60);
+    stroke(255,180,40,220); strokeWeight(2);
+    drawingContext.shadowColor = 'rgba(255,180,40,0.7)';
+    drawingContext.shadowBlur  = 8;
+    line(s/2, s*.18, s/2+vLen, s*.18);
+    noStroke(); fill(255,180,40,220);
+    triangle(s/2+vLen, s*.18, s/2+vLen-8, s*.18-5, s/2+vLen-8, s*.18+5);
+    drawingContext.shadowBlur = 0;
+    pop();
+
+    if (fase !== 'MRU' && acCentripeta > 0.5) {
+      const mag = constrain(acCentripeta*2.5, 10, 50);
+      const dx = CENTRO_X-pos.x, dy = CENTRO_Y-pos.y;
+      const len = Math.sqrt(dx*dx+dy*dy);
+      const nx = dx/len, ny = dy/len;
+      stroke(64,196,255,200); strokeWeight(2);
+      drawingContext.shadowColor = 'rgba(64,196,255,0.6)';
+      drawingContext.shadowBlur  = 8;
+      line(pos.x,pos.y, pos.x+nx*mag, pos.y+ny*mag);
+      noStroke(); fill(64,196,255,200);
+      const ex=pos.x+nx*mag, ey=pos.y+ny*mag, perp={x:-ny,y:nx};
+      triangle(ex,ey, ex-nx*8+perp.x*4,ey-ny*8+perp.y*4, ex-nx*8-perp.x*4,ey-ny*8-perp.y*4);
+      drawingContext.shadowBlur = 0;
+    }
+  }
+
+  // ── HUD ───────────────────────────────────────────────────────────────────
+  function dibujarHUD() {
+    noStroke(); fill(255,255,255,200);
+    textFont('monospace'); textSize(11); textAlign(LEFT);
+    text(`t: ${tiempoFisico.toFixed(1)} s`, 12, 20);
+    text(`v: ${velocidad.toFixed(1)} m/s`, 12, 36);
+    text(`aᶜ: ${acCentripeta.toFixed(2)} m/s²`, 12, 52);
+
+    const mc = fase==='MRU'?[79,172,254]:fase==='TRANSICION'?[255,183,77]:[67,233,190];
+    fill(...mc,200); textAlign(RIGHT); textFont('Segoe UI'); textStyle(BOLD); textSize(12);
+    text(`● ${fase}`, width-12, 20); textStyle(NORMAL);
+  }
+
+  // ── Gráficas ───────────────────────────────────────────────────────────────
+  function makeGrad(color) {
+    return (ctx) => {
+      const { chart } = ctx;
+      const { ctx: c, chartArea } = chart;
+      if (!chartArea) return 'transparent';
+      const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      const base = color.replace('rgb(','').replace(')','').split(',');
+      g.addColorStop(0,   `rgba(${base},0.22)`);
+      g.addColorStop(0.65,`rgba(${base},0.05)`);
+      g.addColorStop(1,   `rgba(${base},0)`);
+      return g;
+    };
+  }
+
+  function crearGraficas() {
+    const zoomPlugin = {
+      zoom: {
+        wheel: { enabled: true, speed: 0.08 },
+        pinch: { enabled: true },
+        mode: 'xy',
+        onZoom() {
+          ['zrPos','zrVel','zrAcc'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'block';
+          });
+        }
+      },
+      pan: { enabled: true, mode: 'xy' }
+    };
+
+    const cfg = (label, color, yLabel) => ({
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label, data: [],
+          borderColor: color,
+          backgroundColor: makeGrad(color),
+          fill: true, tension: 0.42,
+          pointRadius: 0, pointHoverRadius: 0,
+          borderWidth: 2.5, borderJoinStyle: 'round', borderCapStyle: 'round'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            labels: {
+              color: 'rgba(255,255,255,0.45)',
+              font: { size: 10, family: "'Segoe UI',Arial", weight: '500' },
+              boxWidth: 14, boxHeight: 2, padding: 12,
+              usePointStyle: true, pointStyle: 'line'
+            },
+            position: 'top'
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(4,9,22,0.96)',
+            titleColor: 'rgba(255,255,255,0.95)',
+            bodyColor: color,
+            borderColor: color.replace('rgb(','rgba(').replace(')',',0.4)'),
+            borderWidth: 1, padding: { x:12, y:8 }, cornerRadius: 8,
+            displayColors: false,
+            titleFont: { size: 11, weight: '700', family: "'Segoe UI',Arial" },
+            bodyFont:  { size: 12, weight: '700', family: "'Segoe UI',Arial" },
+            callbacks: {
+              title: (i) => `t = ${i[0].label} s`,
+              label: (i) => `${i.dataset.label}: ${parseFloat(i.raw).toFixed(3)}`
+            }
+          },
+          zoom: zoomPlugin,
+          lineaTransicion: {}
+        },
+        scales: {
+          x: {
+            title: { display:true, text:'Tiempo (s)', color:'rgba(255,255,255,0.28)', font:{size:9} },
+            ticks: { color:'rgba(255,255,255,0.28)', font:{size:9}, maxTicksLimit:8, maxRotation:0 },
+            grid: { color:'rgba(255,255,255,0.025)' },
+            border: { color:'rgba(255,255,255,0.05)' }
+          },
+          y: {
+            title: { display:true, text:yLabel, color:'rgba(255,255,255,0.28)', font:{size:9} },
+            ticks: { color:'rgba(255,255,255,0.28)', font:{size:9}, maxTicksLimit:5 },
+            grid: { color:'rgba(255,255,255,0.025)' },
+            border: { color:'rgba(255,255,255,0.05)' }
+          }
+        }
+      }
+    });
+
+    chartPos = new Chart(document.getElementById('chartPos').getContext('2d'),
+      cfg('Posición (m)',     'rgb(79,172,254)',  'Posición (m)'));
+    chartVel = new Chart(document.getElementById('chartVel').getContext('2d'),
+      cfg('Velocidad (m/s)', 'rgb(67,233,190)',  'Velocidad (m/s)'));
+    chartAcc = new Chart(document.getElementById('chartAcc').getContext('2d'),
+      cfg('aᶜ (m/s²)',       'rgb(255,183,77)',  'aᶜ (m/s²)'));
+
+    // ── Crosshair: sincronizar posición del mouse en los tres canvas ────
+    ['chartPos','chartVel','chartAcc'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('mousemove', (e) => {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        [chartPos, chartVel, chartAcc].forEach(c => {
+          c._hoverX = x;
+          c.render(); // solo redibuja el canvas sin recalcular datos
+        });
+      });
+      el.addEventListener('mouseleave', () => {
+        [chartPos, chartVel, chartAcc].forEach(c => {
+          c._hoverX = null;
+          c.render();
+        });
+      });
+    });
+  }
+
+  function resetZoom(which) {
+    const cmap = { pos:chartPos, vel:chartVel, acc:chartAcc };
+    const bmap = { pos:'zrPos',  vel:'zrVel',  acc:'zrAcc'  };
+    cmap[which].resetZoom();
+    const el = document.getElementById(bmap[which]);
+    if (el) el.style.display = 'none';
+  }
+
+  let frameChart = 0;
+  function actualizarGraficas() {
+    frameChart++;
+    if (frameChart % 4 !== 0) return;
+    const tLabel = tiempoFisico.toFixed(2);
+    const posVal = fase === 'MRU' ? distanciaMRU : radio;
+    const MAX = 80;
+
+    function push(chart, val, badgeId, unit) {
+      chart.data.labels.push(tLabel);
+      chart.data.datasets[0].data.push(+val.toFixed(3));
+      if (chart.data.labels.length > MAX) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
+      chart.update('none');
+      const el = document.getElementById(badgeId);
+      if (el) el.textContent = val.toFixed(2) + ' ' + unit;
+    }
+
+    push(chartPos, posVal,       'badgePos', 'm');
+    push(chartVel, velocidad,    'badgeVel', 'm/s');
+    push(chartAcc, acCentripeta, 'badgeAcc', 'm/s²');
+  }
+
+  // ── Reinicio ──────────────────────────────────────────────────────────────
+  function reiniciar() {
+    tiempoFisico = 0; distanciaMRU = 0;
+    anguloMCU = Math.PI; tMCUInicio = 0; tFaseInicio = 0;
+    fase = 'MRU'; acCentripeta = 0; trail = []; frameChart = 0;
+    pausa = false; stepPending = false;
+    document.getElementById('btnPausa').textContent = '⏸ Pausa';
+    document.getElementById('stepBox').classList.remove('visible');
+
+    ['badgePos','badgeVel','badgeAcc'].forEach((id, i) => {
+      const u = ['m','m/s','m/s²'][i];
+      const el = document.getElementById(id);
+      if (el) el.textContent = '— ' + u;
+    });
+    ['zrPos','zrVel','zrAcc'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    [chartPos, chartVel, chartAcc].forEach(c => {
+      c._transicionX = null;
+      c.data.labels = [];
+      c.data.datasets[0].data = [];
+      c.resetZoom();
+      c.update();
+    });
+  }
+
+  function pausarSimulacion() {
+    pausa = !pausa;
+    document.getElementById('btnPausa').textContent = pausa ? '▶ Reanudar' : '⏸ Pausa';
+    if (!pausa) document.getElementById('stepBox').classList.remove('visible');
+  }
+
+  function stepSim_MRUMCU() {
+    if (!pausa) {
+      pausa = true;
+      document.getElementById('btnPausa').textContent = '▶ Reanudar';
+    }
+    stepPending = true;
+    
+    const t = tiempoFisico.toFixed(2);
+    const posVal = fase === 'MRU' ? distanciaMRU : radio;
+    const eq = `t = ${t} s | Fase: ${fase}\nPosición: ${posVal.toFixed(2)} m\nVelocidad: ${velocidad.toFixed(1)} m/s\naᶜ = ${acCentripeta.toFixed(2)} m/s²`;
+    document.getElementById('stepBox').classList.add('visible');
+    document.getElementById('stepEq').textContent = eq;
+  }
+
+  // ── URL params (velocidad) ─────────────────────────────────────────────────
+  (function loadURLParams_MRU(){
+    const sp = new URLSearchParams(location.search);
+    if(sp.has('v')){
+      const v = parseFloat(sp.get('v'));
+      if(!isNaN(v)){
+        document.getElementById('velocidad').value = v;
+        velocidad = v;
+        document.getElementById('velocidadDisplay').textContent = v + ' m/s';
+      }
+    }
+  })();
+
+  // ── Export CSV ─────────────────────────────────────────────────────────────
+  function exportCSV_MRU(){
+    const labels = chartPos.data.labels;
+    const pos    = chartPos.data.datasets[0].data;
+    const vel    = chartVel.data.datasets[0].data;
+    const acc    = chartAcc.data.datasets[0].data;
+    if(!labels.length){ alert('Sin datos. Ejecuta la simulación primero.'); return; }
+    const rows = labels.map((t,i) => `${t},${pos[i]??''},${vel[i]??''},${acc[i]??''}`);
+    const blob = new Blob(['t,pos,vel,ac\n'+rows.join('\n')], {type:'text/csv'});
+    const a = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'mru_mcu.csv'});
+    a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  // ── Share URL ──────────────────────────────────────────────────────────────
+  function shareURL_MRU(){
+    const url = location.origin + location.pathname + '?v=' + velocidad;
+    navigator.clipboard.writeText(url).then(()=>alert('¡URL copiada!')).catch(()=>alert(url));
+  }
+
+  // ── Verificación ───────────────────────────────────────────────────────────
+  let _pregMRU = null;
+  function generarPregMRU(){
+    const tipos = ['tiempo_mru','ac_centripeta','distancia'];
+    const tipo = tipos[Math.floor(Math.random()*tipos.length)];
+    const vf = velocidad.toFixed(1);
+    let texto, respuesta;
+    if(tipo==='tiempo_mru'){
+      const tMRU = 100/velocidad;
+      respuesta = tMRU;
+      texto = `Con v=${vf} m/s, ¿cuánto tiempo tarda el objeto en recorrer los 100 m de MRU? [t = d/v]`;
+    } else if(tipo==='ac_centripeta'){
+      respuesta = (velocidad*velocidad)/radio;
+      texto = `Con v=${vf} m/s y radio r=${radio} m, ¿cuál es la aceleración centrípeta (m/s²)? [aᶜ = v²/r]`;
+    } else {
+      const t_ask = parseFloat((1 + Math.random()*3).toFixed(1));
+      respuesta = velocidad*t_ask;
+      texto = `Con v=${vf} m/s en MRU, ¿cuál es la distancia recorrida en t=${t_ask} s? [x = v·t]`;
+    }
+    _pregMRU = {respuesta};
+    document.getElementById('pregMRU_texto').textContent = texto;
+    document.getElementById('pregMRU_fb').className = 'pv-feedback';
+    document.getElementById('pregMRU_input').value = '';
+  }
+  function verificarMRU(){
+    if(!_pregMRU) return;
+    const usr = parseFloat(document.getElementById('pregMRU_input').value);
+    if(isNaN(usr)){ alert('Ingresa un número.'); return; }
+    const tol = Math.abs(_pregMRU.respuesta)*0.02 + 0.05;
+    const fb = document.getElementById('pregMRU_fb');
+    if(Math.abs(usr - _pregMRU.respuesta) <= tol){
+      fb.className = 'pv-feedback pv-ok';
+      fb.textContent = `✓ ¡Correcto! Respuesta: ${_pregMRU.respuesta.toFixed(3)}`;
+    } else {
+      fb.className = 'pv-feedback pv-fail';
+      fb.textContent = `✗ Incorrecto. Respuesta: ${_pregMRU.respuesta.toFixed(3)}`;
+    }
+  }
+  window.addEventListener('load', ()=>setTimeout(generarPregMRU, 600));
+</script>
+
+<style>
+.pv-section{padding:0 20px 32px;max-width:1200px;margin:16px auto 0;animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay: 0.38s;}
+.pv-card{background:rgba(13,17,32,0.9);border:1px solid rgba(255,255,255,0.07);border-left:3px solid var(--theme-accent);border-radius:12px;padding:20px 24px;}
+.pv-card h4{font-family:'Space Mono',monospace;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--theme-accent);margin:0 0 12px;}
+.pv-texto{font-size:0.9rem;line-height:1.7;color:var(--text);margin-bottom:14px;}
+.pv-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.pv-input{flex:1;min-width:120px;max-width:180px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.8rem;padding:7px 12px;outline:none;transition: border-color 0.2s;}
+.pv-input:focus{border-color:var(--theme-accent);}
+.pv-btn{background:var(--theme-accent);border:none;border-radius:6px;color:#05070f;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;padding:8px 16px;cursor:pointer;box-shadow: var(--theme-glow);transition:filter 0.15s, transform 0.1s, box-shadow 0.2s;}
+.pv-btn:hover{filter:brightness(1.2);transform:translateY(-1px);}
+.pv-btn:active{transform:scale(0.97);}
+.pv-btn2{background:linear-gradient(135deg,#555,#333);border:none;border-radius:6px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;padding:8px 16px;cursor:pointer;transition:filter 0.15s;}
+.pv-feedback{margin-top:12px;padding:10px 14px;border-radius:8px;font-family:'Space Mono',monospace;font-size:0.75rem;display:none;}
+.pv-ok{background:rgba(163,255,107,0.08);border:1px solid rgba(163,255,107,0.3);color:var(--accent3);display:block;}
+.pv-fail{background:rgba(255,60,110,0.08);border:1px solid rgba(255,60,110,0.3);color:var(--accent2);display:block;}
+</style>
+<div class="pv-section">
+  <div class="pv-card">
+    <h4>✓ Pregunta de Verificación</h4>
+    <p class="pv-texto" id="pregMRU_texto">Cargando pregunta…</p>
+    <div class="pv-row">
+      <input type="number" class="pv-input" id="pregMRU_input" placeholder="Tu respuesta" step="0.01">
+      <button class="pv-btn" onclick="verificarMRU()">Verificar →</button>
+      <button class="pv-btn2" onclick="generarPregMRU()">Nueva ❓</button>
+    </div>
+    <div class="pv-feedback" id="pregMRU_fb"></div>
+  </div>
+</div>
+<script src="../assets/js/chatbot.js?v=7"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'MRU + MCU',
+    topic: 'mru_mcu',
+    getState: () => ({
+      tiempo: tiempoFisico,
+      radio: radio / ESCALA,
+      velocidad: velocidad,
+      fase: fase,
+      acCentripeta: acCentripeta,
+      omega: (fase === 'MRU') ? 0 : velocidad / (radio / ESCALA),
+      periodoMCU: (velocidad > 0) ? (2 * Math.PI * (radio / ESCALA)) / velocidad : Infinity
+    })
+  });
+</script>
+<script src="../assets/js/audio.js?v=4"></script>
+<script src="../assets/js/cursor.js"></script>
+</body>
+</html>

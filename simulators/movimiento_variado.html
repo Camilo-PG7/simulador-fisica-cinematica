@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/png" href="../favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movimiento Variado — Cálculo Simbólico</title>
+<script>
+window.MathJax = {
+  tex: { inlineMath:[['\\(','\\)']], displayMath:[['\\[','\\]']], tags:'none' },
+  svg: { fontCache:'global' },
+  options: { skipHtmlTags:['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/chatbot.css">
+<script src="../assets/js/env.js"></script>
+<style>
+:root{
+  --bg:#07090f;--s0:#0d1120;--s1:#111827;--s2:#171f30;--s3:#0a0d18;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.12);
+  --ac:#fbbf24;--adm:rgba(251,191,36,0.12);--agl:rgba(251,191,36,0.26);
+  --gr:#34d399;--gdm:rgba(52,211,153,0.12);
+  --bl:#60a5fa;--bdm:rgba(96,165,250,0.12);
+  --pu:#a78bfa;--pdm:rgba(167,139,250,0.12);
+  --rd:#f87171;--rdm:rgba(248,113,113,0.1);
+  --tx:#e2e8f8;--mu:#64748b;--fn:#2d3a52;
+  --mono:'JetBrains Mono',monospace;--serif:'Crimson Pro',serif;--sans:'DM Sans',sans-serif;
+  --r:10px;--rl:16px;
+  
+  /* Default active theme variables */
+  --theme-accent: var(--ac);
+  --theme-accent-alpha: var(--adm);
+  --theme-accent-alpha-hover: var(--agl);
+  --theme-glow: 0 0 30px rgba(251,191,36,0.25);
+}
+
+body.theme-yellow {
+  --theme-accent: var(--ac);
+  --theme-accent-alpha: var(--adm);
+  --theme-accent-alpha-hover: var(--agl);
+  --theme-glow: 0 0 30px rgba(251,191,36,0.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh;padding:32px 18px 100px;overflow-x:hidden}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(var(--theme-accent-alpha) 1px, transparent 1px);
+  background-size: 28px 28px;
+  animation: scroll-grid-radial 30s linear infinite;
+}
+
+@keyframes scroll-grid-radial {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto}
+
+/* loader */
+#ldr{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .4s}
+#ldr.gone{opacity:0;pointer-events:none}
+.ring{width:40px;height:40px;position:relative}
+.ring div{position:absolute;width:32px;height:32px;margin:4px;border:3px solid var(--ac);border-radius:50%;border-color:var(--ac) transparent transparent;animation:spin 1.2s cubic-bezier(.5,0,.5,1) infinite}
+.ring div:nth-child(1){animation-delay:-.45s}.ring div:nth-child(2){animation-delay:-.3s}.ring div:nth-child(3){animation-delay:-.15s}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.ldr-t{font-family:var(--mono);font-size:.73rem;color:var(--mu);letter-spacing:.08em}
+.ldr-e{font-family:var(--mono);font-size:.75rem;color:var(--rd);display:none;padding:10px 18px;border:1px solid rgba(248,113,113,.2);border-radius:8px;background:var(--rdm);text-align:center}
+
+.back{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;margin-bottom:26px;background:transparent;border:1px solid var(--bdr2);border-radius:7px;color:var(--mu);font-family:var(--sans);font-size:.78rem;text-decoration:none;cursor:pointer;transition:color .18s,background .18s,border-color .2s,box-shadow .2s,transform .15s}
+.back:hover{color:var(--tx);background:var(--theme-accent-alpha);border-color:var(--theme-accent);box-shadow:var(--theme-glow);transform:translateX(-2px)}
+
+.hdr{margin-bottom:26px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;margin-bottom:10px;background:var(--adm);border:1px solid rgba(251,191,36,.25);border-radius:20px;color:var(--ac);font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:300;font-size:2rem;color:#fff;line-height:1.15;margin-bottom:5px}
+h1 em{color:var(--ac);font-style:normal}
+.sub{font-size:.85rem;color:var(--mu)}
+.hr{height:1px;background:linear-gradient(90deg,var(--adm),transparent);margin-bottom:22px}
+
+.panel{background:var(--s0);border:1px solid var(--bdr);border-radius:var(--rl);overflow:hidden;margin-bottom:14px}
+.ph{padding:11px 20px;border-bottom:1px solid var(--bdr);background:var(--s1);display:flex;align-items:center;gap:9px}
+.pi{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-family:var(--mono);flex-shrink:0}
+.ya{background:var(--adm);color:var(--ac)}.yg{background:var(--gdm);color:var(--gr)}.yb{background:var(--bdm);color:var(--bl)}.yp{background:var(--pdm);color:var(--pu)}
+.pt{font-size:.7rem;font-family:var(--mono);color:var(--mu);letter-spacing:.07em;text-transform:uppercase}
+.pb{padding:20px}
+
+/* type buttons */
+.trow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tt{padding:7px 16px;border-radius:8px;border:1px solid var(--bdr2);background:transparent;color:var(--mu);font-family:var(--mono);font-size:.72rem;cursor:pointer;transition:all .15s;letter-spacing:.04em;display:flex;align-items:center;gap:7px}
+.tt .dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.35;flex-shrink:0}
+.tt:hover,.tt.on{border-color:rgba(251,191,36,.5);color:var(--ac);background:var(--adm)}
+.tt:hover .dot,.tt.on .dot{opacity:1}
+
+/* preview */
+.pvbox{background:var(--s3);border:2px solid var(--bdr2);border-radius:var(--r);padding:14px 18px;min-height:62px;margin-bottom:18px;display:flex;align-items:center;gap:12px;transition:border-color .2s,box-shadow .2s}
+.pvbox.on{border-color:rgba(251,191,36,.45);box-shadow:0 0 0 3px rgba(251,191,36,.06)}
+.pvlhs{font-family:var(--serif);font-size:1.1rem;color:var(--mu);white-space:nowrap;flex-shrink:0}
+.pveq{color:var(--fn);font-family:var(--serif);font-size:1.1rem;flex-shrink:0}
+.pvrhs{flex:1;overflow-x:auto;min-height:28px;display:flex;align-items:center}
+.pvmt{color:var(--fn);font-style:italic;font-size:.82rem;font-family:var(--sans)}
+
+/* column headers */
+.chdr{display:grid;grid-template-columns:26px 100px 42px 80px 80px 34px;gap:7px;margin-bottom:5px;padding:0 1px}
+.chdr span{font-size:.6rem;font-family:var(--mono);color:var(--fn);text-align:center;text-transform:uppercase;letter-spacing:.04em}
+
+/* term rows */
+.tlist{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;min-height:20px}
+.ti{display:grid;grid-template-columns:26px 100px 42px 80px 80px 34px;gap:7px;align-items:center;animation:fi .18s ease}
+.ti.isconst{grid-template-columns:26px 100px auto auto 34px}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.idx{font-family:var(--mono);font-size:.66rem;color:var(--fn);text-align:center}
+.tf{background:var(--s2);border:1px solid var(--bdr2);border-radius:7px;color:var(--tx);font-family:var(--mono);font-size:.86rem;padding:8px 9px;width:100%;outline:none;transition:transform .2s, border-color .18s, box-shadow .2s;-webkit-appearance:none;text-align:center}
+.tf:hover{border-color:var(--theme-accent);box-shadow:0 0 6px var(--theme-glow);transform:scale(1.02)}
+.tf:focus{border-color:rgba(251,191,36,.45);box-shadow:0 0 10px var(--theme-glow);transform:scale(1.02)}
+.tf::placeholder{color:var(--fn);font-size:.72rem}
+.ti-lbl{font-family:var(--serif);font-size:1rem;color:var(--mu);text-align:center;font-style:italic;user-select:none}
+/* unit select */
+.tsel{background:var(--s2);border:1px solid var(--bdr2);border-radius:7px;color:var(--tx);font-family:var(--mono);font-size:.72rem;padding:8px 5px;width:100%;outline:none;cursor:pointer;-webkit-appearance:none;text-align:center;transition:transform .2s, border-color .18s, box-shadow .2s}
+.tsel:hover{border-color:var(--theme-accent);box-shadow:0 0 6px var(--theme-glow);transform:scale(1.03)}
+.tsel:focus{border-color:rgba(251,191,36,.45);box-shadow:0 0 10px var(--theme-glow);transform:scale(1.03)}
+.tsel option{background:var(--s2)}
+.tcbdg{font-size:.61rem;font-family:var(--mono);color:var(--mu);padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;user-select:none;white-space:nowrap;text-align:center}
+.tdl{background:transparent;border:1px solid var(--bdr);border-radius:6px;color:var(--fn);width:30px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.88rem;transition:all .14s;flex-shrink:0}
+.tdl:hover{background:var(--rdm);border-color:rgba(248,113,113,.3);color:var(--rd)}
+
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.abtn{padding:6px 13px;border-radius:7px;border:1px dashed var(--bdr2);background:transparent;color:var(--mu);font-family:var(--mono);font-size:.7rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.abtn:hover{border-color:rgba(96,165,250,.5);color:var(--bl);background:var(--bdm)}
+.abtn.a2:hover{border-color:rgba(167,139,250,.5);color:var(--pu);background:var(--pdm)}
+
+.act{display:flex;gap:9px;align-items:center}
+.bgo{display:flex;align-items:center;gap:7px;padding:10px 26px;background:var(--ac);border:none;border-radius:var(--r);color:#07090f;font-family:var(--mono);font-size:.8rem;font-weight:700;cursor:pointer;transition:all .18s;box-shadow:0 4px 16px var(--agl);letter-spacing:.04em}
+.bgo:hover{transform:translateY(-1px);box-shadow:0 6px 24px var(--agl)}
+.bgo:active{transform:translateY(0)}
+.brst{padding:10px 15px;background:transparent;border:1px solid var(--bdr2);border-radius:var(--r);color:var(--mu);font-family:var(--mono);font-size:.76rem;cursor:pointer;transition:all .15s}
+.brst:hover{color:var(--rd);border-color:rgba(248,113,113,.4);background:var(--rdm)}
+
+/* ───── RESULTS ───── */
+#rp{display:none}#rp.show{display:block}
+.rbase{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 15px;margin-bottom:14px;background:var(--adm);border:1px solid rgba(251,191,36,.2);border-radius:var(--r);font-size:.7rem;color:var(--ac);font-family:var(--mono);animation:fi .3s ease}
+.rdot{width:5px;height:5px;background:var(--ac);border-radius:50%;flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.rcards{display:flex;flex-direction:column;gap:12px}
+.rcard{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;animation:fi .3s ease both;transition:border-color .2s}
+.rcard:nth-child(1){animation-delay:.04s}.rcard:nth-child(2){animation-delay:.1s}.rcard:nth-child(3){animation-delay:.16s}
+.rcard:hover{border-color:var(--bdr2)}.rcard.isb{border-color:rgba(251,191,36,.25)}
+.rch{display:flex;align-items:center;justify-content:space-between;padding:8px 15px;border-bottom:1px solid var(--bdr);background:var(--s2)}
+.rsym{font-family:var(--mono);font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:5px}
+.rsym.rp{background:var(--gdm);color:var(--gr)}.rsym.rv{background:var(--bdm);color:var(--bl)}.rsym.ra{background:var(--adm);color:var(--ac)}
+.rnm{font-size:.7rem;color:var(--mu);margin-left:7px}
+.rpill{font-size:.6rem;font-family:var(--mono);padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}
+.rpill.base{background:var(--adm);color:var(--ac);border:1px solid rgba(251,191,36,.2)}
+.rpill.der{background:var(--bdm);color:var(--bl);border:1px solid rgba(96,165,250,.2)}
+.rpill.int{background:var(--gdm);color:var(--gr);border:1px solid rgba(52,211,153,.2)}
+.runt{font-family:var(--mono);font-size:.62rem;color:var(--fn);padding:2px 7px;border:1px solid var(--bdr);border-radius:4px}
+.rcpy{background:transparent;border:1px solid var(--bdr);border-radius:5px;color:var(--fn);font-size:.62rem;font-family:var(--mono);padding:2px 8px;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:4px}
+.rcpy:hover{border-color:var(--bdr2);color:var(--mu)}.rcpy.ok{color:var(--gr);border-color:rgba(52,211,153,.4)}
+
+/* result equation */
+.req{padding:18px 20px 20px;display:flex;align-items:center;gap:12px}
+.rlhs{font-family:var(--serif);font-size:1.1rem;color:var(--mu);white-space:nowrap;flex-shrink:0}
+.reqs{color:var(--fn);font-family:var(--serif);font-size:1.1rem;flex-shrink:0}
+.rrhs{flex:1;overflow-x:auto;padding:3px 0}
+.cnote{font-size:.66rem;color:var(--fn);font-family:var(--mono);margin-top:5px}
+
+/* ───── STEP BY STEP ───── */
+.steps-btn{display:flex;align-items:center;gap:7px;width:100%;padding:9px 15px;background:transparent;border:none;border-top:1px solid var(--bdr);color:var(--mu);font-family:var(--mono);font-size:.7rem;cursor:pointer;transition:all .15s;text-align:left;letter-spacing:.04em}
+.steps-btn:hover{background:rgba(255,255,255,.02);color:var(--tx)}
+.steps-btn.open{color:var(--ac)}
+.steps-btn svg{transition:transform .2s;flex-shrink:0}
+.steps-btn.open svg{transform:rotate(180deg)}
+.steps-wrap{display:none;border-top:1px solid var(--bdr);background:var(--s3);padding:0}
+.steps-wrap.open{display:block}
+.step-block{padding:14px 18px;border-bottom:1px solid var(--bdr)}
+.step-block:last-child{border-bottom:none}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-family:var(--mono);font-size:.62rem;font-weight:600;margin-right:8px;flex-shrink:0}
+.step-num.sn-ac{background:var(--adm);color:var(--ac);border:1px solid rgba(251,191,36,.3)}
+.step-num.sn-bl{background:var(--bdm);color:var(--bl);border:1px solid rgba(96,165,250,.3)}
+.step-num.sn-gr{background:var(--gdm);color:var(--gr);border:1px solid rgba(52,211,153,.3)}
+.step-title{font-family:var(--mono);font-size:.7rem;color:var(--tx);font-weight:600;letter-spacing:.04em}
+.step-sub{font-size:.76rem;color:var(--mu);font-family:var(--sans);margin:8px 0 6px 28px;line-height:1.5}
+.step-math{margin:8px 0 4px 28px;overflow-x:auto;padding:3px 0}
+.step-rule{margin:6px 0 0 28px;font-size:.67rem;color:var(--fn);font-family:var(--mono);padding:5px 10px;background:rgba(255,255,255,.025);border-radius:5px;border-left:2px solid var(--fn)}
+
+/* ───── EVAL ───── */
+.evgi{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:.66rem;font-family:var(--mono);color:var(--mu);text-transform:uppercase;letter-spacing:.06em}
+.fld input,.fld select{background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.86rem;padding:9px 11px;width:100%;outline:none;transition:transform .2s, border-color .18s, box-shadow .2s;-webkit-appearance:none}
+.fld input:hover,.fld select:hover{border-color:var(--theme-accent);box-shadow:0 0 8px var(--theme-glow);transform:scale(1.02)}
+.fld input:focus,.fld select:focus{border-color:rgba(251,191,36,.4);box-shadow:0 0 12px var(--theme-glow);transform:scale(1.02)}
+.fld input::placeholder{color:var(--fn)}
+.fld select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer}
+.fld select option{background:var(--s2)}
+.bev{padding:9px 16px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.76rem;cursor:pointer;transition:all .15s;white-space:nowrap}
+.bev:hover{color:var(--ac);border-color:rgba(251,191,36,.4);background:var(--adm)}
+.evo{display:none;margin-top:14px;animation:fi .28s ease}
+.evo.show{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.evc{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px}
+.evc.ep{border-top:2px solid var(--gr)}.evc.ev{border-top:2px solid var(--bl)}.evc.ea{border-top:2px solid var(--ac)}
+.evl{font-size:.62rem;font-family:var(--mono);color:var(--fn);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.evv{font-family:var(--mono);font-size:1.05rem;font-weight:500}
+.evu{font-size:.64rem;color:var(--fn);font-family:var(--mono);margin-top:3px}
+
+.errbox{padding:12px 16px;background:var(--rdm);border:1px solid rgba(248,113,113,.18);border-radius:var(--r);font-size:.81rem;color:var(--rd);animation:fi .25s ease}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s1);border:1px solid var(--bdr2);border-radius:var(--r);padding:9px 16px;font-family:var(--mono);font-size:.72rem;color:var(--gr);box-shadow:0 8px 28px rgba(0,0,0,.6);transform:translateY(50px);opacity:0;transition:all .26s cubic-bezier(.34,1.56,.64,1);z-index:999;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:600px){
+  body{padding:16px 12px 80px}
+  .chdr{display:none}.ti{grid-template-columns:22px 80px 36px 66px 66px 28px;gap:5px}
+  .ti.isconst{grid-template-columns:22px 80px auto 28px}
+  .evgi{grid-template-columns:1fr 1fr}.evgi .bev{grid-column:1/-1}
+  .evo.show{grid-template-columns:1fr}
+  .req{flex-direction:column;align-items:flex-start;gap:5px}
+}
+
+/* ── Entrance Animations & Cascaded Staggers ─────────────────────── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in-bottom {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hdr {
+  animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.05s;
+}
+
+.panel:nth-of-type(1) {
+  animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.12s;
+}
+.panel:nth-of-type(2) {
+  animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.2s;
+}
+.panel:nth-of-type(3) {
+  animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.28s;
+}
+</style>
+</head>
+<body class="theme-yellow">
+
+<!-- Loader -->
+<div id="ldr">
+  <div class="ring"><div></div><div></div><div></div></div>
+  <div class="ldr-t" id="ldrt">Cargando motor de cálculo...</div>
+  <div class="ldr-e" id="ldre">No se pudo cargar. Verifica tu conexión y recarga.</div>
+</div>
+
+<div class="wrap">
+  <a href="../index.html#menu" class="back">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Volver
+  </a>
+  <div class="hdr">
+    <div class="chip"><svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>Cinemática · Módulo 03</div>
+    <h1>Movimiento <em>Variado</em></h1>
+    <p class="sub">Cálculo simbólico con derivación e integración — resultados en LaTeX con paso a paso</p>
+  </div>
+  <div class="hr"></div>
+
+  <!-- ═══ INPUT ═══ -->
+  <div class="panel">
+    <div class="ph"><div class="pi ya">ƒ</div><span class="pt">Constructor de Ecuación</span></div>
+    <div class="pb">
+      <div class="trow">
+        <button class="tt on" data-v="pos" onclick="setType('pos')"><span class="dot"></span>x(t) · Posición</button>
+        <button class="tt" data-v="vel" onclick="setType('vel')"><span class="dot"></span>v(t) · Velocidad</button>
+        <button class="tt" data-v="acc" onclick="setType('acc')"><span class="dot"></span>a(t) · Aceleración</button>
+      </div>
+
+      <div class="pvbox" id="pvbox">
+        <span class="pvlhs" id="pvlhs">x(t)</span>
+        <span class="pveq">&thinsp;=&thinsp;</span>
+        <div class="pvrhs" id="pvrhs"><span class="pvmt">agrega términos abajo...</span></div>
+      </div>
+
+      <div class="chdr">
+        <span></span><span>Coeficiente</span><span></span><span>Exp. de t</span><span>Unidad</span><span></span>
+      </div>
+      <div class="tlist" id="tlist"></div>
+
+      <div class="addrow">
+        <button class="abtn" onclick="addTerm()">
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          + término · a·tⁿ
+        </button>
+        <button class="abtn a2" onclick="addConst()">
+          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          + constante
+        </button>
+      </div>
+
+      <div class="act">
+        <button class="bgo" onclick="calculate()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 7h10M7 2l5 5-5 5"/></svg>
+          Calcular
+        </button>
+        <button class="brst" onclick="resetAll()">Limpiar todo</button>
+        <button class="brst" style="color:var(--gr);border-color:rgba(52,211,153,0.3)" onclick="exportCSV_MV()">⬇ CSV</button>
+        <button class="brst" style="color:var(--pu);border-color:rgba(167,139,250,0.3)" onclick="shareURL_MV()">🔗 Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTS ═══ -->
+  <div class="panel" id="rp">
+    <div class="ph"><div class="pi yg">∂</div><span class="pt">Resultados — LaTeX</span></div>
+    <div class="pb" id="rb"></div>
+  </div>
+
+  <!-- ═══ EVAL ═══ -->
+  <div class="panel">
+    <div class="ph"><div class="pi yb">t₀</div><span class="pt">Evaluación Numérica</span></div>
+    <div class="pb">
+      <div class="evgi">
+        <div class="fld"><label>Tiempo t =</label><input id="eT" type="number" step="any" placeholder="Ej: 2"></div>
+        <div class="fld"><label>Decimales</label>
+          <select id="eP">
+            <option value="4">4 decimales</option>
+            <option value="2">2 decimales</option>
+            <option value="6">6 decimales</option>
+          </select>
+        </div>
+        <button class="bev" onclick="evalNow()">Evaluar</button>
+      </div>
+      <div class="evo" id="evo"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══ Load nerdamer in sequence ═══ -->
+<script>
+function ldSc(src, ok, fail) {
+  var s = document.createElement('script');
+  s.src = src; s.onload = ok;
+  s.onerror = fail || function(){
+    document.getElementById('ldrt').style.display='none';
+    document.getElementById('ldre').style.display='block';
+  };
+  document.head.appendChild(s);
+}
+var NB = 'https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/';
+ldSc(NB+'nerdamer.core.min.js', function(){
+ldSc(NB+'Algebra.js', function(){
+ldSc(NB+'Calculus.js', function(){
+ldSc(NB+'Solve.js', function(){
+  var l=document.getElementById('ldr');
+  l.classList.add('gone');
+  setTimeout(function(){l.style.display='none';},420);
+  initApp();
+});});});});
+</script>
+
+<script>
+function initApp(){
+
+/* ══════════════════════════════════════
+   UNIT SYSTEM — igual que el PDF
+   El PDF muestra: (2 m/s³)·t² etc.
+   Unidades por tipo de ecuación:
+   - posición    → m/s^n  (metros)
+   - velocidad   → m/s^(n+1)
+   - aceleración → m/s^(n+2)
+══════════════════════════════════════ */
+var UNITS_BY_TYPE = {
+  pos: ['m','m/s','m/s²','m/s³','m/s⁴','m/s⁵','m/s⁶','sin unidad'],
+  vel: ['m/s','m/s²','m/s³','m/s⁴','m/s⁵','m/s⁶','sin unidad'],
+  acc: ['m/s²','m/s³','m/s⁴','m/s⁵','m/s⁶','sin unidad']
+};
+
+/* unidad LaTeX para resultados */
+var UNIT_TEX = {
+  pos: '\\,\\text{m}',
+  vel: '\\,\\text{m/s}',
+  acc: '\\,\\text{m/s}^2'
+};
+
+var curType='pos', tid=0, terms=[], comp={}, ltx={}, pvt=null, stepData={};
+var FLB={pos:'x(t)',vel:'v(t)',acc:'a(t)'};
+
+/* ── TIPO ── */
+window.setType=function(v){
+  curType=v;
+  document.querySelectorAll('.tt').forEach(function(b){b.classList.toggle('on',b.dataset.v===v);});
+  document.getElementById('pvlhs').textContent=FLB[v];
+  // rebuild unit selects
+  terms.forEach(function(t){ if(!t.isC){ rebuildUnitSelect(t.id); } });
+  schedPv();
+};
+
+function rebuildUnitSelect(id){
+  var sel=document.getElementById('u'+id);
+  if(!sel)return;
+  var cur=sel.value;
+  var opts=UNITS_BY_TYPE[curType];
+  sel.innerHTML=opts.map(function(u){return '<option value="'+u+'"'+(u===cur?' selected':'')+'>'+u+'</option>';}).join('');
+}
+
+/* ── AGREGAR TÉRMINOS ── */
+window.addTerm=function(c,e,u){
+  c=c||''; e=(e===undefined)?'':e; u=u||UNITS_BY_TYPE[curType][0];
+  var id=tid++;
+  terms.push({id:id,coef:c,exp:e,unit:u,isC:false});
+  renderTerms();
+  setTimeout(function(){var i=document.getElementById('c'+id);if(i)i.focus();},40);
+};
+
+window.addConst=function(v){
+  v=v||'';
+  var id=tid++;
+  terms.push({id:id,coef:v,exp:null,unit:'',isC:true});
+  renderTerms();
+  setTimeout(function(){var i=document.getElementById('c'+id);if(i)i.focus();},40);
+};
+
+window.removeTerm=function(id){
+  terms=terms.filter(function(t){return t.id!==id;});
+  renderTerms(); schedPv();
+};
+
+/* ── RENDER FILAS ── */
+function renderTerms(){
+  var list=document.getElementById('tlist');
+  if(!terms.length){
+    list.innerHTML='<div style="padding:12px;text-align:center;font-size:.79rem;color:var(--fn);font-family:var(--sans);">Presiona "+ término" para comenzar</div>';
+    return;
+  }
+  list.innerHTML=terms.map(function(t,i){
+    if(t.isC){
+      return '<div class="ti isconst" id="tr'+t.id+'">'
+        +'<span class="idx">'+(i+1)+'</span>'
+        +'<input id="c'+t.id+'" class="tf" type="number" step="any" placeholder="valor" value="'+esc(t.coef)+'" oninput="upd('+t.id+',\'coef\',this.value)" onkeydown="tk(event)">'
+        +'<span class="tcbdg">constante</span>'
+        +'<span class="tcbdg" style="color:var(--fn)">—</span>'
+        +'<button class="tdl" onclick="removeTerm('+t.id+')" title="Eliminar">×</button>'
+        +'</div>';
+    }
+    var opts=UNITS_BY_TYPE[curType].map(function(u){
+      return '<option value="'+u+'"'+(u===t.unit?' selected':'')+'>'+u+'</option>';
+    }).join('');
+    return '<div class="ti" id="tr'+t.id+'">'
+      +'<span class="idx">'+(i+1)+'</span>'
+      +'<input id="c'+t.id+'" class="tf" type="number" step="any" placeholder="coef" value="'+esc(t.coef)+'" oninput="upd('+t.id+',\'coef\',this.value)" onkeydown="tk(event)">'
+      +'<span class="ti-lbl">t</span>'
+      +'<input id="e'+t.id+'" class="tf" type="number" step="any" min="0" placeholder="exp" value="'+esc(t.exp)+'" oninput="upd('+t.id+',\'exp\',this.value)" onkeydown="tk(event)">'
+      +'<select id="u'+t.id+'" class="tsel" onchange="upd('+t.id+',\'unit\',this.value)">'+opts+'</select>'
+      +'<button class="tdl" onclick="removeTerm('+t.id+')" title="Eliminar">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+window.upd=function(id,field,val){
+  var t=terms.find(function(x){return x.id===id;});
+  if(t)t[field]=val;
+  schedPv();
+};
+window.tk=function(e){if(e.key==='Enter')calculate();};
+
+/* ── CONSTRUIR EXPRESIÓN (solo numérica para nerdamer) ── */
+function buildExpr(){
+  var parts=[];
+  terms.forEach(function(t){
+    var c=String(t.coef||'').trim();
+    if(!c||c==='-')return;
+    if(t.isC){parts.push(c);return;}
+    var ex=String(t.exp===null?'':t.exp).trim();
+    if(ex==='')return;
+    var en=parseFloat(ex);
+    if(isNaN(en))return;
+    if(en===0)      parts.push(c);
+    else if(en===1) parts.push('('+c+')*t');
+    else            parts.push('('+c+')*t^('+ex+')');
+  });
+  return parts.length?parts.join('+'):null;
+}
+
+/* Construir LaTeX legible con unidades como en el PDF */
+function buildLatexWithUnits(termsArr){
+  var parts=[];
+  termsArr.forEach(function(t){
+    var c=String(t.coef||'').trim();
+    if(!c||c==='-')return;
+    if(t.isC){
+      parts.push(c);return;
+    }
+    var ex=String(t.exp===null?'':t.exp).trim();
+    if(ex==='')return;
+    var en=parseFloat(ex);
+    if(isNaN(en))return;
+    var coefPart='';
+    var cf=parseFloat(c);
+    if(!isNaN(cf)){
+      // show as fraction if unit context
+      coefPart=c;
+    } else {
+      coefPart=c;
+    }
+    var unitTex=unitToTex(t.unit);
+    var tPart='';
+    if(en===0)      tPart='';
+    else if(en===1) tPart=' \\cdot t';
+    else            tPart=' \\cdot t^{'+ex+'}';
+
+    if(unitTex){
+      parts.push('\\left('+coefPart+' \\,'+unitTex+'\\right)'+tPart);
+    } else {
+      parts.push(coefPart+tPart);
+    }
+  });
+  return parts.length?parts.join(' + '):'0';
+}
+
+function unitToTex(u){
+  if(!u||u==='sin unidad')return '';
+  var map={
+    'm':'\\text{m}',
+    'm/s':'\\dfrac{\\text{m}}{\\text{s}}',
+    'm/s²':'\\dfrac{\\text{m}}{\\text{s}^2}',
+    'm/s³':'\\dfrac{\\text{m}}{\\text{s}^3}',
+    'm/s⁴':'\\dfrac{\\text{m}}{\\text{s}^4}',
+    'm/s⁵':'\\dfrac{\\text{m}}{\\text{s}^5}',
+    'm/s⁶':'\\dfrac{\\text{m}}{\\text{s}^6}'
+  };
+  return map[u]||('\\text{'+u+'}');
+}
+
+/* ── PREVIEW ── */
+function schedPv(){clearTimeout(pvt);pvt=setTimeout(doPv,320);}
+
+function doPv(){
+  var box=document.getElementById('pvbox');
+  var rhs=document.getElementById('pvrhs');
+  var eq=buildExpr();
+  if(!eq){rhs.innerHTML='<span class="pvmt">agrega términos abajo...</span>';box.classList.remove('on');return;}
+  box.classList.add('on');
+  // Try LaTeX with units
+  try{
+    var withUnits=buildLatexWithUnits(terms);
+    rhs.innerHTML='\\(\\displaystyle '+withUnits+'\\)';
+    MathJax.typesetPromise([rhs]).catch(function(){
+      // fallback to nerdamer
+      try{var tex=nerdamer(eq).toTeX();rhs.innerHTML='\\(\\displaystyle '+tex+'\\)';MathJax.typesetPromise([rhs]);}
+      catch(e){rhs.textContent=eq;}
+    });
+  }catch(e){
+    rhs.innerHTML='<span style="font-family:var(--mono);color:var(--ac);font-size:.85rem">'+esc(eq)+'</span>';
+  }
+}
+
+/* ══════════════════════════════════════
+   GENERATE STEP-BY-STEP
+══════════════════════════════════════ */
+function generateSteps(eq, ops, posNerd, velNerd, accNerd){
+  var steps={pos:[],vel:[],acc:[]};
+  var TN={pos:'Posición',vel:'Velocidad',acc:'Aceleración'};
+
+  if(curType==='pos'){
+    // pos es base
+    steps.pos=[{type:'base',
+      title:'Ecuación base: Posición',
+      desc:'Esta es la ecuación que ingresaste directamente.',
+      math:'x(t) = '+ltx.pos+UNIT_TEX.pos,
+      rule:null
+    }];
+    // vel = d(pos)/dt
+    steps.vel=genDiffSteps(terms,'posición','velocidad',ltx.pos,ltx.vel,'pos');
+    // acc = d(vel)/dt
+    steps.acc=genDiffStepsFromTex(velNerd,'velocidad','aceleración',ltx.vel,ltx.acc,'vel');
+  } else if(curType==='vel'){
+    steps.vel=[{type:'base',
+      title:'Ecuación base: Velocidad',
+      desc:'Esta es la ecuación que ingresaste directamente.',
+      math:'v(t) = '+ltx.vel+UNIT_TEX.vel,
+      rule:null
+    }];
+    steps.pos=genIntSteps(terms,'velocidad','posición',ltx.vel,ltx.pos,'vel');
+    steps.acc=genDiffSteps(terms,'velocidad','aceleración',ltx.vel,ltx.acc,'vel');
+  } else {
+    steps.acc=[{type:'base',
+      title:'Ecuación base: Aceleración',
+      desc:'Esta es la ecuación que ingresaste directamente.',
+      math:'a(t) = '+ltx.acc+UNIT_TEX.acc,
+      rule:null
+    }];
+    steps.vel=genIntSteps(terms,'aceleración','velocidad',ltx.acc,ltx.vel,'acc');
+    steps.pos=genIntStepsFromTex(velNerd,'velocidad','posición',ltx.vel,ltx.pos,'vel');
+  }
+  return steps;
+}
+
+function genDiffSteps(termsArr, fromName, toName, fromTex, toTex, fromType){
+  var steps=[];
+  var UNITS={pos:UNIT_TEX.pos,vel:UNIT_TEX.vel,acc:UNIT_TEX.acc};
+  var unitFrom=UNITS[fromType];
+  var unitTo=fromType==='pos'?UNIT_TEX.vel:UNIT_TEX.acc;
+  var symFrom=fromType==='pos'?'x(t)':'v(t)';
+  var symTo=fromType==='pos'?'v(t)':'a(t)';
+  steps.push({
+    type:'op',
+    title:'Aplicar derivación para obtener '+toName,
+    desc:'Se deriva la ecuación de '+fromName+' con respecto al tiempo t.',
+    math: symTo+' = \\dfrac{d}{dt}\\Big['+symFrom+'\\Big] = \\dfrac{d}{dt}\\Big['+fromTex+'\\Big]',
+    rule:'Regla de derivación: \\(\\dfrac{d}{dt}[a \\cdot t^n] = a \\cdot n \\cdot t^{n-1}\\)'
+  });
+  // show each term
+  var termSteps=[];
+  termsArr.forEach(function(t){
+    var c=String(t.coef||'').trim();
+    if(!c||c==='-')return;
+    if(t.isC){
+      termSteps.push('\\dfrac{d}{dt}['+c+'] = 0 \\quad (\\text{constante})');
+      return;
+    }
+    var ex=String(t.exp===null?'':t.exp).trim();
+    if(ex==='')return;
+    var en=parseFloat(ex);
+    if(isNaN(en))return;
+    var cf=parseFloat(c);
+    if(en===0){
+      termSteps.push('\\dfrac{d}{dt}['+c+'] = 0');
+    } else if(en===1){
+      termSteps.push('\\dfrac{d}{dt}['+c+'\\,t] = '+c);
+    } else {
+      var newCoef=isNaN(cf)?'('+c+'\\cdot '+en+')':String(cf*en);
+      var newExp=en-1;
+      if(newExp===1) termSteps.push('\\dfrac{d}{dt}['+c+'\\,t^{'+en+'}] = '+newCoef+'\\,t');
+      else if(newExp===0) termSteps.push('\\dfrac{d}{dt}['+c+'\\,t^{'+en+'}] = '+newCoef);
+      else termSteps.push('\\dfrac{d}{dt}['+c+'\\,t^{'+en+'}] = '+newCoef+'\\,t^{'+newExp+'}');
+    }
+  });
+  if(termSteps.length>1){
+    steps.push({
+      type:'terms',
+      title:'Derivada de cada término',
+      desc:'Aplicando la regla de la potencia a cada término:',
+      terms: termSteps,
+      rule:null
+    });
+  }
+  steps.push({
+    type:'result',
+    title:'Resultado: '+toName,
+    desc:'Sumando todos los términos derivados:',
+    math: symTo+' = '+toTex+unitTo,
+    rule:null
+  });
+  return steps;
+}
+
+function genDiffStepsFromTex(fromNerd, fromName, toName, fromTex, toTex, fromType){
+  var unitTo=fromType==='pos'?UNIT_TEX.vel:UNIT_TEX.acc;
+  var symFrom=fromType==='pos'?'x(t)':fromType==='vel'?'v(t)':'a(t)';
+  var symTo=fromType==='vel'?'a(t)':'?';
+  return [{
+    type:'op',
+    title:'Aplicar derivación para obtener '+toName,
+    desc:'Se deriva la ecuación de '+fromName+' con respecto al tiempo t.',
+    math: symTo+' = \\dfrac{d}{dt}\\Big['+fromTex+'\\Big]',
+    rule:'Regla de la potencia: \\(\\dfrac{d}{dt}[a \\cdot t^n] = a \\cdot n \\cdot t^{n-1}\\)'
+  },{
+    type:'result',
+    title:'Resultado: '+toName,
+    desc:'Resultado de la derivación:',
+    math: symTo+' = '+toTex+unitTo,
+    rule:null
+  }];
+}
+
+function genIntSteps(termsArr, fromName, toName, fromTex, toTex, fromType){
+  var unitTo=fromType==='vel'?UNIT_TEX.pos:UNIT_TEX.vel;
+  var symFrom=fromType==='vel'?'v(t)':'a(t)';
+  var symTo=fromType==='vel'?'x(t)':'v(t)';
+  var steps=[];
+  steps.push({
+    type:'op',
+    title:'Aplicar integración para obtener '+toName,
+    desc:'Se integra la ecuación de '+fromName+' con respecto al tiempo t.',
+    math: symTo+' = \\int '+symFrom+'\\,dt = \\int \\Big['+fromTex+'\\Big]\\,dt',
+    rule:'Regla de integración: \\(\\int a \\cdot t^n\\,dt = \\dfrac{a}{n+1}\\,t^{n+1} + C\\)'
+  });
+  var termSteps=[];
+  termsArr.forEach(function(t){
+    var c=String(t.coef||'').trim();
+    if(!c||c==='-')return;
+    if(t.isC){
+      termSteps.push('\\int '+c+'\\,dt = '+c+'\\,t + C');
+      return;
+    }
+    var ex=String(t.exp===null?'':t.exp).trim();
+    if(ex==='')return;
+    var en=parseFloat(ex);
+    if(isNaN(en))return;
+    var cf=parseFloat(c);
+    var newExp=en+1;
+    var denom=newExp;
+    var numStr=isNaN(cf)?c:String(cf);
+    if(en===0){
+      termSteps.push('\\int '+c+'\\,dt = '+c+'\\,t');
+    } else {
+      termSteps.push('\\int '+c+'\\,t^{'+en+'}\\,dt = \\dfrac{'+numStr+'}{'+denom+'}\\,t^{'+newExp+'}');
+    }
+  });
+  if(termSteps.length>0){
+    steps.push({
+      type:'terms',
+      title:'Integral de cada término',
+      desc:'Aplicando la regla de la potencia a cada término:',
+      terms: termSteps,
+      rule:null
+    });
+  }
+  steps.push({
+    type:'result',
+    title:'Resultado: '+toName,
+    desc:'Sumando todos los términos integrados + constante C:',
+    math: symTo+' = '+toTex+' + C'+unitTo,
+    rule:'C = constante de integración (depende de condiciones iniciales)'
+  });
+  return steps;
+}
+
+function genIntStepsFromTex(fromNerd, fromName, toName, fromTex, toTex, fromType){
+  var unitTo=fromType==='vel'?UNIT_TEX.pos:UNIT_TEX.vel;
+  var symFrom=fromType==='vel'?'v(t)':'a(t)';
+  var symTo=fromType==='vel'?'x(t)':'v(t)';
+  return [{
+    type:'op',
+    title:'Aplicar integración para obtener '+toName,
+    desc:'Se integra la ecuación de '+fromName+'.',
+    math: symTo+' = \\int \\Big['+fromTex+'\\Big]\\,dt',
+    rule:'Regla de integración: \\(\\int a \\cdot t^n\\,dt = \\dfrac{a}{n+1}\\,t^{n+1} + C\\)'
+  },{
+    type:'result',
+    title:'Resultado: '+toName,
+    desc:'Resultado de la integración + constante C:',
+    math: symTo+' = '+toTex+' + C'+unitTo,
+    rule:'C = constante de integración'
+  }];
+}
+
+/* ══════════════════════════════════════
+   CALCULATE
+══════════════════════════════════════ */
+window.calculate=function(){
+  var eq=buildExpr();
+  if(!eq){toast('Agrega al menos un término');return;}
+  try{
+    var pos,vel,acc,ops;
+    if(curType==='pos'){
+      pos=nerdamer(eq); vel=nerdamer('diff('+eq+',t)'); acc=nerdamer('diff('+vel.toString()+',t)');
+      ops={pos:'base',vel:'der',acc:'der'};
+    } else if(curType==='vel'){
+      vel=nerdamer(eq); pos=nerdamer('integrate('+eq+',t)'); acc=nerdamer('diff('+eq+',t)');
+      ops={pos:'int',vel:'base',acc:'der'};
+    } else {
+      acc=nerdamer(eq); vel=nerdamer('integrate('+eq+',t)'); pos=nerdamer('integrate('+vel.toString()+',t)');
+      ops={pos:'int',vel:'int',acc:'base'};
+    }
+    comp={pos:pos,vel:vel,acc:acc};
+    ltx={pos:pos.toTeX(),vel:vel.toTeX(),acc:acc.toTeX()};
+    stepData=generateSteps(eq,ops,pos,vel,acc);
+    renderRes(eq,ops);
+  }catch(err){
+    document.getElementById('rb').innerHTML='<div class="errbox">⚠ Error: <code style="font-size:.75em;opacity:.6">'+esc(err.message||'verifique la ecuación')+'</code></div>';
+    document.getElementById('rp').classList.add('show');
+  }
+};
+
+/* ══════════════════════════════════════
+   RENDER RESULTS
+══════════════════════════════════════ */
+function renderRes(eq,ops){
+  var OPL={base:'Ecuación base',der:'Derivación',int:'Integración'};
+  var TN={pos:'posición',vel:'velocidad',acc:'aceleración'};
+  var rows=[
+    {id:'pos',sym:'x(t)',sc:'rp',nm:'Posición',   unit:'m',    tex:ltx.pos,op:ops.pos,hasC:ops.pos==='int'},
+    {id:'vel',sym:'v(t)',sc:'rv',nm:'Velocidad',  unit:'m/s',  tex:ltx.vel,op:ops.vel,hasC:ops.vel==='int'},
+    {id:'acc',sym:'a(t)',sc:'ra',nm:'Aceleración',unit:'m/s²', tex:ltx.acc,op:ops.acc,hasC:false}
+  ];
+
+  var cards=rows.map(function(r){
+    var dtex=r.hasC?r.tex+' + C':r.tex;
+    var unitT=UNIT_TEX[r.id];
+    var stepsHtml=buildStepsHtml(stepData[r.id]||[],r.id);
+    return '<div class="rcard '+(r.op==='base'?'isb':'')+'">'
+      +'<div class="rch">'
+        +'<div style="display:flex;align-items:center">'
+          +'<span class="rsym '+r.sc+'">'+r.sym+'</span>'
+          +'<span class="rnm">'+r.nm+'</span>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span class="rpill '+r.op+'">'+OPL[r.op]+'</span>'
+          +'<span class="runt">'+r.unit+'</span>'
+          +'<button class="rcpy" id="rcpy'+r.id+'" onclick="cpyTex(\''+r.id+'\','+r.hasC+')">'
+            +'<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>'
+            +'LaTeX</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="req">'
+        +'<span class="rlhs">'+r.sym+'</span>'
+        +'<span class="reqs">&thinsp;=&thinsp;</span>'
+        +'<div class="rrhs" id="rrhs'+r.id+'">'
+          +'\\(\\displaystyle '+dtex+unitT+'\\)'
+          +(r.hasC?'<div class="cnote">C = constante de integración</div>':'')
+        +'</div>'
+      +'</div>'
+      // Step-by-step toggle
+      +'<button class="steps-btn" id="sbtn'+r.id+'" onclick="toggleSteps(\''+r.id+'\')">'
+        +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        +'Ver paso a paso'
+        +' <span style="margin-left:auto;font-size:.6rem;color:var(--fn)">'+stepData[r.id].length+' pasos</span>'
+      +'</button>'
+      +'<div class="steps-wrap" id="sw'+r.id+'">'
+        +stepsHtml
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  var html='<div class="rbase"><span class="rdot"></span>'
+    +'Ecuación base como <strong style="color:var(--tx);margin:0 3px">'+TN[curType]+'</strong>'
+    +' <span style="color:var(--fn)">·</span> '
+    +'<code style="font-family:var(--mono);font-size:.73em;color:var(--ac)">'+esc(eq)+'</code>'
+    +'</div><div class="rcards">'+cards+'</div>';
+
+  var rb=document.getElementById('rb');
+  rb.innerHTML=html;
+  document.getElementById('rp').classList.add('show');
+  MathJax.typesetPromise([rb]).catch(console.error);
+}
+
+/* ══════════════════════════════════════
+   BUILD STEPS HTML
+══════════════════════════════════════ */
+function buildStepsHtml(stepsArr, cardId){
+  if(!stepsArr||!stepsArr.length) return '<div style="padding:12px 18px;font-size:.78rem;color:var(--fn);font-family:var(--sans)">No hay pasos disponibles.</div>';
+  var colors=['sn-ac','sn-bl','sn-gr'];
+  return stepsArr.map(function(s,i){
+    var col=colors[i%3];
+    var html='<div class="step-block">'
+      +'<div style="display:flex;align-items:center">'
+        +'<span class="step-num '+col+'">'+(i+1)+'</span>'
+        +'<span class="step-title">'+esc(s.title)+'</span>'
+      +'</div>';
+    if(s.desc) html+='<div class="step-sub">'+esc(s.desc)+'</div>';
+    if(s.type==='terms'&&s.terms){
+      s.terms.forEach(function(tm){
+        html+='<div class="step-math">\\(\\displaystyle '+tm+'\\)</div>';
+      });
+    } else if(s.math){
+      html+='<div class="step-math">\\(\\displaystyle '+s.math+'\\)</div>';
+    }
+    if(s.rule) html+='<div class="step-rule">'+s.rule+'</div>';
+    html+='</div>';
+    return html;
+  }).join('');
+}
+
+/* ── Toggle steps ── */
+window.toggleSteps=function(id){
+  var btn=document.getElementById('sbtn'+id);
+  var wrap=document.getElementById('sw'+id);
+  var open=wrap.classList.toggle('open');
+  btn.classList.toggle('open',open);
+  btn.querySelector('span:first-child').textContent='';
+  if(open){
+    btn.childNodes[1].textContent=' Ocultar paso a paso';
+    MathJax.typesetPromise([wrap]).catch(function(){});
+  } else {
+    btn.childNodes[1].textContent=' Ver paso a paso';
+  }
+};
+
+/* ── COPY LATEX ── */
+window.cpyTex=function(id,hasC){
+  var full=hasC?ltx[id]+' + C':ltx[id];
+  navigator.clipboard.writeText(full).then(function(){
+    var btn=document.getElementById('rcpy'+id);
+    btn.classList.add('ok');btn.textContent='✓ Copiado';
+    toast('LaTeX copiado');
+    setTimeout(function(){
+      btn.classList.remove('ok');
+      btn.innerHTML='<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>LaTeX';
+    },2000);
+  });
+};
+
+/* ── EVALUACIÓN NUMÉRICA ── */
+window.evalNow=function(){
+  var tv=document.getElementById('eT').value.trim();
+  var pr=parseInt(document.getElementById('eP').value);
+  if(!tv){toast('Ingresa un valor de t');return;}
+  if(!comp.pos){toast('Primero calcula una ecuación');return;}
+  try{
+    var pv=parseFloat(comp.pos.evaluate({t:tv}).text()).toFixed(pr);
+    var vv=parseFloat(comp.vel.evaluate({t:tv}).text()).toFixed(pr);
+    var av=parseFloat(comp.acc.evaluate({t:tv}).text()).toFixed(pr);
+    var out=document.getElementById('evo');
+    out.innerHTML=
+      '<div class="evc ep"><div class="evl">Posición · t = '+tv+' s</div><div class="evv">'+pv+'</div><div class="evu">metros (m)</div></div>'
+     +'<div class="evc ev"><div class="evl">Velocidad · t = '+tv+' s</div><div class="evv">'+vv+'</div><div class="evu">m / s</div></div>'
+     +'<div class="evc ea"><div class="evl">Aceleración · t = '+tv+' s</div><div class="evv">'+av+'</div><div class="evu">m / s²</div></div>';
+    out.classList.add('show');
+  }catch(e){toast('Error al evaluar — revisa el valor de t');}
+};
+
+/* ── RESET ── */
+window.resetAll=function(){
+  terms=[];tid=0;comp={};ltx={};stepData={};
+  renderTerms();doPv();
+  document.getElementById('rp').classList.remove('show');
+  document.getElementById('rb').innerHTML='';
+  document.getElementById('evo').classList.remove('show');
+  document.getElementById('evo').innerHTML='';
+  document.getElementById('eT').value='';
+};
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2400);}
+
+/* ── INIT con términos del PDF de ejemplo ── */
+addTerm('2','2','m/s³');
+addTerm('3','3','m/s⁴');
+addTerm('4','4','m/s⁵');
+// set type to vel as in PDF example
+setTimeout(function(){setType('vel');},100);
+
+/* ── EXPORT CSV ── */
+window.exportCSV_MV=function(){
+  var tv=document.getElementById('eT').value.trim();
+  if(!comp.pos){toast('Primero calcula una ecuación');return;}
+  // Export evaluated table from t=0 to t=10
+  var lines=['t,x,v,a'];
+  for(var i=0;i<=100;i++){
+    var t=(i/10).toFixed(1);
+    try{
+      var x=parseFloat(comp.pos.evaluate({t:t}).text()).toFixed(4);
+      var v=parseFloat(comp.vel.evaluate({t:t}).text()).toFixed(4);
+      var a=parseFloat(comp.acc.evaluate({t:t}).text()).toFixed(4);
+      lines.push(t+','+x+','+v+','+a);
+    }catch(e){}
+  }
+  var blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  var a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'movimiento_variado.csv'});
+  a.click();URL.revokeObjectURL(a.href);
+  toast('CSV exportado (t = 0..10 s)');
+};
+
+/* ── SHARE URL ── */
+window.shareURL_MV=function(){
+  navigator.clipboard.writeText(location.href).then(function(){toast('URL copiada al portapapeles');}).catch(function(){toast(location.href);});
+};
+
+/* ── PREGUNTA DE VERIFICACIÓN ── */
+var _pregMV=null;
+window.generarPregMV=function(){
+  if(!comp.pos){toast('Primero calcula una ecuación');return;}
+  var tv=parseFloat((1+Math.random()*5).toFixed(1));
+  var tipos=['posicion','velocidad'];
+  var tipo=tipos[Math.floor(Math.random()*tipos.length)];
+  var texto,respuesta;
+  try{
+    if(tipo==='posicion'){
+      respuesta=parseFloat(comp.pos.evaluate({t:String(tv)}).text());
+      texto='Para la ecuación ingresada, ¿cuál es x('+tv+')? (en metros)';
+    } else {
+      respuesta=parseFloat(comp.vel.evaluate({t:String(tv)}).text());
+      texto='Para la ecuación ingresada, ¿cuál es v('+tv+')? (en m/s)';
+    }
+    _pregMV={respuesta:respuesta};
+    document.getElementById('pregMV_texto').textContent=texto;
+    document.getElementById('pregMV_fb').className='mv-feedback';
+    document.getElementById('pregMV_input').value='';
+  }catch(e){toast('Calcula primero la ecuación');}
+};
+window.verificarMV=function(){
+  if(!_pregMV)return;
+  var usr=parseFloat(document.getElementById('pregMV_input').value);
+  if(isNaN(usr)){toast('Ingresa un número');return;}
+  var tol=Math.abs(_pregMV.respuesta)*0.02+0.05;
+  var fb=document.getElementById('pregMV_fb');
+  if(Math.abs(usr-_pregMV.respuesta)<=tol){
+    fb.className='mv-feedback mv-ok';fb.textContent='✓ ¡Correcto! Respuesta: '+_pregMV.respuesta.toFixed(4);
+  } else {
+    fb.className='mv-feedback mv-fail';fb.textContent='✗ Incorrecto. Respuesta: '+_pregMV.respuesta.toFixed(4);
+  }
+};
+
+} // fin initApp
+</script>
+
+<!-- Pregunta de verificación -->
+<style>
+.mv-section{max-width:860px;margin:18px auto 32px;padding:0 18px;animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay: 0.38s;}
+.mv-card{background:var(--s0);border:1px solid var(--bdr);border-left:3px solid var(--theme-accent);border-radius:var(--rl);padding:18px 22px;}
+.mv-card h4{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--theme-accent);margin-bottom:12px;}
+.mv-txt{font-size:.9rem;line-height:1.7;color:var(--tx);margin-bottom:14px;font-family:var(--sans);}
+.mv-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.mv-input{flex:1;min-width:120px;max-width:180px;background:var(--s2);border:1px solid var(--bdr2);border-radius:var(--r);color:var(--tx);font-family:var(--mono);font-size:.85rem;padding:8px 12px;outline:none;transition: border-color 0.2s;}
+.mv-input:focus{border-color:var(--theme-accent);}
+.mv-btn{background:var(--theme-accent);border:none;border-radius:var(--r);color:#07090f;font-family:var(--mono);font-size:.75rem;font-weight:700;padding:9px 16px;cursor:pointer;box-shadow: var(--theme-glow);transition:filter .15s, transform 0.1s, box-shadow 0.2s;}
+.mv-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.mv-btn:active{transform:scale(0.97);}
+.mv-btn2{background:transparent;border:1px solid var(--bdr2);border-radius:var(--r);color:var(--mu);font-family:var(--mono);font-size:.75rem;font-weight:700;padding:9px 16px;cursor:pointer;transition:all .15s;}
+.mv-btn2:hover{color:var(--tx);background:rgba(255,255,255,.04);}
+.mv-feedback{margin-top:12px;padding:10px 14px;border-radius:var(--r);font-family:var(--mono);font-size:.75rem;display:none;}
+.mv-ok{background:var(--gdm);border:1px solid rgba(52,211,153,.3);color:var(--gr);display:block;}
+.mv-fail{background:var(--rdm);border:1px solid rgba(248,113,113,.3);color:var(--rd);display:block;}
+</style>
+<div class="mv-section">
+  <div class="mv-card">
+    <h4>✓ Pregunta de Verificación</h4>
+    <p class="mv-txt" id="pregMV_texto">Primero calcula una ecuación y luego presiona "Nueva pregunta".</p>
+    <div class="mv-row">
+      <input type="number" class="mv-input" id="pregMV_input" placeholder="Tu respuesta" step="0.0001">
+      <button class="mv-btn" onclick="verificarMV()">Verificar →</button>
+      <button class="mv-btn2" onclick="generarPregMV()">Nueva ❓</button>
+    </div>
+    <div class="mv-feedback" id="pregMV_fb"></div>
+  </div>
+</div>
+<script src="../assets/js/chatbot.js?v=7"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Movimiento Variado (Cálculo Simbólico)',
+    topic: 'varied_motion',
+    getState: () => {
+      const tValStr = document.getElementById('eT') ? document.getElementById('eT').value.trim() : '';
+      const tVal = tValStr ? parseFloat(tValStr) : 0;
+      const state = { tiempo: tVal };
+      if (typeof comp !== 'undefined' && comp.pos) {
+        try {
+          state.posicion = parseFloat(comp.pos.evaluate({ t: tVal }).text());
+          state.velocidad = parseFloat(comp.vel.evaluate({ t: tVal }).text());
+          state.aceleracion = parseFloat(comp.acc.evaluate({ t: tVal }).text());
+        } catch (e) {
+          // ignore evaluation errors
+        }
+      }
+      return state;
+    }
+  });
+</script>
+<script src="../assets/js/audio.js?v=4"></script>
+<script src="../assets/js/cursor.js"></script>
+</body>
+</html>

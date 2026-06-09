@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="icon" type="image/png" href="../favicon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Máquina de Atwood — Simulador de Física</title>
+<meta name="description" content="Simulador de la máquina de Atwood: dos masas en polea, aceleración y tensión calculadas analíticamente, animación del movimiento.">
+<link rel="stylesheet" href="../assets/css/sim-shared.css">
+<link rel="stylesheet" href="../assets/css/chatbot.css">
+<script src="../assets/js/env.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<style>
+.analytic-box{
+  margin-top:12px;
+  background:var(--theme-accent-alpha);
+  border:1px solid var(--theme-accent-alpha-hover);
+  border-radius:8px;padding:10px;
+}
+.analytic-box .data-row{ border-bottom-color:rgba(255,255,255,0.04); }
+/* ✅ FIX CRÍTICO */
+#simContainer {
+  min-height: 420px;
+  width: 100%;
+  position: relative;
+  flex: 1;
+}
+#simContainer canvas { display: block; }
+</style>
+</head>
+<body class="theme-rose">
+
+<a href="../index.html#menu" id="btnVolver">← Volver</a>
+<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
+
+<div class="main-container">
+  <div class="simulation-area">
+    <div class="panels-wrapper">
+
+      <!-- CONTROLS -->
+      <div class="controls">
+        <h3>⚙ Masas</h3>
+
+        <div class="param-group">
+          <div class="param-header">
+            <span class="param-label">Masa m₁ (kg)</span>
+            <span class="param-value" id="m1Display">3.0</span>
+          </div>
+          <input type="range" id="m1" min="0.5" max="20" step="0.1" value="3" oninput="onParamChange()">
+        </div>
+
+        <div class="param-group">
+          <div class="param-header">
+            <span class="param-label">Masa m₂ (kg)</span>
+            <span class="param-value" id="m2Display">1.0</span>
+          </div>
+          <input type="range" id="m2" min="0.5" max="20" step="0.1" value="1" oninput="onParamChange()">
+        </div>
+
+        <div class="btn-row-3">
+          <button class="sim-btn btn-pause"  id="btnPausa"  onclick="togglePause()">⏸ Pausa</button>
+          <button class="sim-btn btn-step"   onclick="stepSim()">▶ Step</button>
+          <button class="sim-btn btn-reset"  onclick="resetSim()">↺ Reset</button>
+        </div>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="sim-btn btn-csv"   onclick="exportCSV()">⬇ CSV</button>
+          <button class="sim-btn btn-share" onclick="shareURL()">🔗 Link</button>
+        </div>
+        <div class="step-box" id="stepBox"><div class="step-eq" id="stepEq">—</div></div>
+      </div>
+
+      <!-- DATA PANEL -->
+      <div class="data-panel">
+        <h3>📊 Resultados</h3>
+        <div class="data-row"><span class="data-key">Tiempo</span>     <span class="data-val val-white"  id="dTiempo">0.00 s</span></div>
+        <div class="data-row"><span class="data-key">Velocidad</span>  <span class="data-val val-cyan"   id="dVel">0.000 m/s</span></div>
+        <div class="data-row"><span class="data-key">Pos. m₁</span>   <span class="data-val val-purple" id="dPos1">0.000 m</span></div>
+        <div class="data-row"><span class="data-key">Pos. m₂</span>   <span class="data-val val-orange" id="dPos2">0.000 m</span></div>
+
+        <div class="analytic-box">
+          <div class="data-row"><span class="data-key">a analítica</span><span class="data-val val-cyan"   id="dAcel">— m/s²</span></div>
+          <div class="data-row"><span class="data-key">Tensión T</span>  <span class="data-val val-yellow" id="dTension">— N</span></div>
+          <div class="data-row"><span class="data-key">Peso m₁</span>    <span class="data-val val-purple" id="dW1">— N</span></div>
+          <div class="data-row"><span class="data-key">Peso m₂</span>    <span class="data-val val-orange" id="dW2">— N</span></div>
+          <div class="data-row"><span class="data-key">F_neta</span>     <span class="data-val val-white"  id="dFnet">— N</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="simulation-container" id="simContainer"></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="graficas-container">
+    <div class="grafica-wrapper gw-cyan">
+      <div class="grafica-header">
+        <span class="graph-title">Velocidad vs Tiempo</span>
+        <span class="chart-badge badge-cyan" id="badgeVel">— m/s</span>
+      </div>
+      <div class="grafica-content"><canvas id="chartVel"></canvas></div>
+      <div class="equation-box">
+        <p class="equation">v(t) = a·t &nbsp; · &nbsp; a = (m₁−m₂)g / (m₁+m₂)</p>
+        <p class="equation-explanation">Válido para polea ideal sin masa ni fricción</p>
+      </div>
+    </div>
+
+    <div class="grafica-wrapper gw-purple" style="--accent-p:rgba(181,123,238,0.4);border-top:2px solid var(--accent-p)">
+      <div class="grafica-header">
+        <span class="graph-title">Posiciones vs Tiempo</span>
+        <span class="chart-badge badge-purple" id="badgePos">— m</span>
+      </div>
+      <div class="grafica-content"><canvas id="chartPos"></canvas></div>
+      <div class="equation-box">
+        <p class="equation">x(t) = ½·a·t² &nbsp; · &nbsp; T = 2m₁m₂g / (m₁+m₂)</p>
+        <p class="equation-explanation">x₁ baja · x₂ sube simétricamente</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERIFICATION -->
+  <div class="verificacion-section">
+    <div class="verificacion-card">
+      <h4>✓ Pregunta de Verificación</h4>
+      <p class="pregunta-text" id="preguntaText">Ajusta las masas para generar una pregunta.</p>
+      <div class="respuesta-row">
+        <input type="number" class="respuesta-input" id="respuestaInput" placeholder="Tu respuesta" step="0.001">
+        <button class="btn-verificar" onclick="verificar()">Verificar →</button>
+        <button class="btn-verificar" style="background:linear-gradient(135deg,#555,#333)" onclick="generarPregunta()">Nueva ❓</button>
+      </div>
+      <div class="feedback-box" id="feedbackBox"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  ESTADO
+// ═══════════════════════════════════════════════════════════
+const G=9.81;
+let m1=3, m2=1;
+let vel=0, pos1=0, pos2=0, tiempo=0, pausa=false;
+let acel=0, tension=0;
+let datosCSV=[];
+let chartVel, chartPos;
+let stepPending=false;
+const MAX_DROP=2.5;
+
+// ✅ FIX: inicialización dentro de DOMContentLoaded
+window.addEventListener('DOMContentLoaded', function(){
+  const sp=new URLSearchParams(location.search);
+  if(sp.has('m1')){document.getElementById('m1').value=sp.get('m1');m1=+sp.get('m1');}
+  if(sp.has('m2')){document.getElementById('m2').value=sp.get('m2');m2=+sp.get('m2');}
+  syncDisplays();
+  computeAnalytics();
+});
+
+function syncDisplays(){
+  document.getElementById('m1Display').textContent=parseFloat(document.getElementById('m1').value).toFixed(1);
+  document.getElementById('m2Display').textContent=parseFloat(document.getElementById('m2').value).toFixed(1);
+}
+
+function computeAnalytics(){
+  acel    =(m1-m2)*G/(m1+m2);
+  tension =2*m1*m2*G/(m1+m2);
+  document.getElementById('dAcel').textContent   =acel.toFixed(4)+' m/s²';
+  document.getElementById('dTension').textContent=tension.toFixed(3)+' N';
+  document.getElementById('dW1').textContent     =(m1*G).toFixed(2)+' N';
+  document.getElementById('dW2').textContent     =(m2*G).toFixed(2)+' N';
+  document.getElementById('dFnet').textContent   =((m1-m2)*G).toFixed(2)+' N';
+  generarPregunta();
+}
+
+function onParamChange(){
+  m1=parseFloat(document.getElementById('m1').value);
+  m2=parseFloat(document.getElementById('m2').value);
+  syncDisplays(); computeAnalytics();
+  updateURLParams(); resetSim();
+}
+function updateURLParams(){ history.replaceState(null,'','?'+new URLSearchParams({m1,m2}).toString()); }
+
+function resetSim(){
+  vel=0;pos1=0;pos2=0;tiempo=0;pausa=false;
+  document.getElementById('btnPausa').textContent='⏸ Pausa';
+  document.getElementById('stepBox').classList.remove('visible');
+  datosCSV=[];
+  [chartVel,chartPos].forEach(c=>{if(c){c.data.labels=[];c.data.datasets.forEach(d=>d.data=[]);c.update('none');}});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  p5.js
+// ═══════════════════════════════════════════════════════════
+function setup(){
+  const cont=document.getElementById('simContainer');
+  const W=Math.max(cont.getBoundingClientRect().width,300);
+  const c=createCanvas(W,420);
+  c.parent(cont);
+  iniciarGraficas();
+  resetSim();
+}
+
+function windowResized(){
+  const cont=document.getElementById('simContainer');
+  resizeCanvas(Math.max(cont.getBoundingClientRect().width,300),420);
+}
+
+function draw(){
+  background(5,7,15);
+  if(!pausa||stepPending){
+    stepPending=false;
+    actualizarFisica();
+  }
+  dibujarEscena();
+}
+
+function actualizarFisica(){
+  const dt=Math.min(deltaTime,50)/1000;
+  tiempo+=dt;
+  vel+=acel*dt;
+  pos1+=vel*dt;
+  pos2-=vel*dt;
+
+  if(pos1>MAX_DROP || pos2<-MAX_DROP){
+    if(Math.abs(vel) > 0.1 && window.SFX) SFX.playThud(Math.abs(vel) / 5);
+    if(pos1>MAX_DROP) pos1=MAX_DROP;
+    if(pos2<-MAX_DROP) pos2=-MAX_DROP;
+    vel=0;
+  }
+
+  datosCSV.push({t:tiempo,vel,pos1,pos2});
+  if(frameCount%2===0) actualizarGraficas(tiempo,vel,pos1,pos2);
+
+  document.getElementById('dTiempo').textContent=tiempo.toFixed(2)+' s';
+  document.getElementById('dVel').textContent   =vel.toFixed(3)+' m/s';
+  document.getElementById('dPos1').textContent  =pos1.toFixed(3)+' m';
+  document.getElementById('dPos2').textContent  =pos2.toFixed(3)+' m';
+
+  if(pausa) mostrarStepEq();
+}
+
+function mostrarStepEq(){
+  const t=tiempo.toFixed(3);
+  const vCalc=(acel*tiempo).toFixed(3);
+  const x1=(0.5*acel*tiempo*tiempo).toFixed(3);
+  const eq=`a = (m₁−m₂)g/(m₁+m₂) = (${m1}−${m2})×${G}/(${m1}+${m2}) = ${acel.toFixed(4)} m/s²\nv(${t}s) = ${acel.toFixed(4)}×${t} = ${vCalc} m/s\nx₁(${t}s) = ½×${acel.toFixed(4)}×${(tiempo*tiempo).toFixed(3)} = ${x1} m\nT = 2×${m1}×${m2}×${G}/(${m1+m2}) = ${tension.toFixed(3)} N`;
+  document.getElementById('stepBox').classList.add('visible');
+  document.getElementById('stepEq').textContent=eq;
+}
+
+function dibujarEscena(){
+  const cx=width/2;
+  const poleaY=60, poleaR=28;
+  const cuerda_len=height-poleaY-poleaR-30;
+  const pxPerM=cuerda_len/MAX_DROP;
+
+  fill(30,40,70); stroke(0,229,255,80); strokeWeight(2);
+  rectMode(CENTER); rect(cx,poleaY-26,100,16,4); rectMode(CORNER);
+  fill(20,20,30); line(cx,poleaY-18,cx,poleaY);
+
+  fill(40,50,80); stroke(0,229,255,120); strokeWeight(2);
+  ellipse(cx,poleaY,poleaR*2,poleaR*2);
+  fill(20,30,50); noStroke();
+  ellipse(cx,poleaY,poleaR*0.5,poleaR*0.5);
+
+  const angPolea=(pos1/(0.5*poleaR/pxPerM));
+  stroke(0,229,255,60); strokeWeight(1.5);
+  for(let i=0;i<6;i++){
+    const a=angPolea+i*Math.PI/3;
+    line(cx+Math.cos(a)*poleaR*0.3,poleaY+Math.sin(a)*poleaR*0.3,
+         cx+Math.cos(a)*poleaR*0.85,poleaY+Math.sin(a)*poleaR*0.85);
+  }
+
+  const y1=poleaY+poleaR+pos1*pxPerM;
+  const y2=poleaY+poleaR+(-pos2)*pxPerM;
+  const cxL=cx-poleaR, cxR=cx+poleaR;
+
+  stroke(0,229,255,100); strokeWeight(2);
+  line(cxL,poleaY,cxL,y1);
+  line(cxR,poleaY,cxR,y2);
+
+  const s1=Math.min(40+m1*2,70);
+  drawMasa(cxL-s1/2,y1,s1,m1,'rgb(181,123,238)','m₁',acel>0);
+
+  const s2=Math.min(40+m2*2,70);
+  drawMasa(cxR-s2/2,y2,s2,m2,'rgb(255,159,67)','m₂',acel<0);
+
+  drawVec(cxL,y1,-0,-(tension*1.5),'rgb(255,209,102)','T',true);
+  drawVec(cxR,y2, 0,-(tension*1.5),'rgb(255,209,102)','T',true);
+
+  if(Math.abs(vel)>0.02){
+    fill(0,229,255,200); noStroke(); textSize(11); textFont('monospace'); textAlign(CENTER);
+    text(`v = ${vel.toFixed(2)} m/s`, cx, height-15);
+  }
+}
+
+function drawMasa(x,y,s,masa,col,label,bajando){
+  noStroke(); fill(0,0,0,50); rect(x+4,y+4,s,s,6);
+  fill(col); stroke(255,255,255,40); strokeWeight(1);
+  rect(x,y,s,s,6);
+  noStroke(); fill(255,255,255,25);
+  rect(x+4,y+4,s-8,8,3);
+  fill(255); noStroke(); textSize(12); textAlign(CENTER,CENTER); textFont('monospace');
+  text(masa.toFixed(1)+'kg',x+s/2,y+s/2);
+  const py=bajando?s+18:s-18;
+  drawVec(x+s/2,y+s/2,0,bajando?40:-40,col,label);
+}
+
+function drawVec(x,y,dx,dy,col,label,skip){
+  if(skip===true){
+    stroke(col); strokeWeight(1.5); fill(col);
+    line(x,y,x+dx,y+dy);
+    const hl=6,ang=Math.atan2(dy,dx);
+    push();translate(x+dx,y+dy);rotate(ang);noStroke();
+    beginShape();vertex(0,0);vertex(-hl,-hl/2);vertex(-hl,hl/2);endShape(CLOSE);pop();
+    return;
+  }
+  if(Math.abs(dx)<2&&Math.abs(dy)<2)return;
+  const hl=7,ang=Math.atan2(dy,dx);
+  stroke(col);strokeWeight(2);fill(col);
+  drawingContext.shadowColor=col;drawingContext.shadowBlur=5;
+  line(x,y,x+dx,y+dy);
+  drawingContext.shadowBlur=0;
+  push();translate(x+dx,y+dy);rotate(ang);noStroke();
+  beginShape();vertex(0,0);vertex(-hl,-hl/2);vertex(-hl,hl/2);endShape(CLOSE);
+  translate(5,0);rotate(-ang);fill(255);noStroke();textSize(9);text(label,0,4);pop();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GRÁFICAS
+// ═══════════════════════════════════════════════════════════
+function makeGrad(ctx,r,g,b){
+  const {chart}=ctx;const {ctx:c,chartArea:ca}=chart;
+  if(!ca)return 'transparent';
+  const gr=c.createLinearGradient(0,ca.top,0,ca.bottom);
+  gr.addColorStop(0,`rgba(${r},${g},${b},0.22)`);
+  gr.addColorStop(0.7,`rgba(${r},${g},${b},0.04)`);
+  gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+  return gr;
+}
+const bOpts=(yL)=>({
+  responsive:true,maintainAspectRatio:false,animation:false,
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{labels:{color:'rgba(255,255,255,0.4)',font:{size:10,family:"'Space Mono',monospace"},boxWidth:14,boxHeight:2,usePointStyle:true,pointStyle:'line'},position:'top'},
+    tooltip:{backgroundColor:'rgba(5,7,15,0.96)',titleColor:'rgba(255,255,255,0.9)',bodyColor:'rgba(255,255,255,0.65)',borderColor:'rgba(181,123,238,0.2)',borderWidth:1,padding:{x:12,y:8},cornerRadius:8,callbacks:{title:i=>`t = ${i[0].label} s`}},
+    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:true,mode:'xy'}}
+  },
+  scales:{
+    x:{title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}},ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.02)'},border:{color:'rgba(255,255,255,0.04)'}},
+    y:{title:{display:true,text:yL,color:'rgba(255,255,255,0.25)',font:{size:9}},ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:6},grid:{color:'rgba(255,255,255,0.02)'},border:{color:'rgba(255,255,255,0.04)'}}
+  }
+});
+
+function iniciarGraficas(){
+  chartVel=new Chart(document.getElementById('chartVel'),{
+    type:'line',
+    data:{labels:[],datasets:[{label:'v (m/s)',data:[],borderColor:'rgb(0,229,255)',backgroundColor:ctx=>makeGrad(ctx,0,229,255),fill:true,tension:0.4,pointRadius:0,borderWidth:2.5}]},
+    options:bOpts('v (m/s)')
+  });
+  chartPos=new Chart(document.getElementById('chartPos'),{
+    type:'line',
+    data:{labels:[],datasets:[
+      {label:'pos m₁ (m)',data:[],borderColor:'rgb(181,123,238)',fill:false,tension:0.4,pointRadius:0,borderWidth:2},
+      {label:'pos m₂ (m)',data:[],borderColor:'rgb(255,159,67)', fill:false,tension:0.4,pointRadius:0,borderWidth:2}
+    ]},
+    options:bOpts('Posición (m)')
+  });
+}
+
+function actualizarGraficas(t,v,p1,p2){
+  const lbl=t.toFixed(2);const MAX=100;
+  const push=(c,...vals)=>{
+    c.data.labels.push(lbl);
+    vals.forEach((val,i)=>c.data.datasets[i].data.push(+val.toFixed(4)));
+    if(c.data.labels.length>MAX){c.data.labels.shift();c.data.datasets.forEach(d=>d.data.shift());}
+    c.update('none');
+  };
+  push(chartVel,v);
+  push(chartPos,p1,p2);
+  document.getElementById('badgeVel').textContent=v.toFixed(3)+' m/s';
+  document.getElementById('badgePos').textContent=p1.toFixed(3)+' m';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONTROLES
+// ═══════════════════════════════════════════════════════════
+function togglePause(){
+  pausa=!pausa;
+  document.getElementById('btnPausa').textContent=pausa?'▶ Reanudar':'⏸ Pausa';
+  if(!pausa)document.getElementById('stepBox').classList.remove('visible');
+}
+function stepSim(){
+  if(!pausa){pausa=true;document.getElementById('btnPausa').textContent='▶ Reanudar';}
+  stepPending=true;mostrarStepEq();
+}
+
+function exportCSV(){
+  if(!datosCSV.length){alert('Sin datos aún.');return;}
+  const hdr='t,vel,pos1,pos2';
+  const rows=datosCSV.map(d=>`${d.t.toFixed(3)},${d.vel.toFixed(4)},${d.pos1.toFixed(4)},${d.pos2.toFixed(4)}`);
+  const blob=new Blob([hdr+'\n'+rows.join('\n')],{type:'text/csv'});
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:'atwood.csv'});
+  a.click();URL.revokeObjectURL(a.href);
+}
+function shareURL(){
+  updateURLParams();
+  navigator.clipboard.writeText(location.href).then(()=>alert('¡URL copiada!')).catch(()=>alert(location.href));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VERIFICACIÓN
+// ═══════════════════════════════════════════════════════════
+let preguntaActual=null;
+function generarPregunta(){
+  if(typeof acel==='undefined'||acel===0&&tension===0) return;
+  const tipos=['aceleracion','tension'];
+  const tipo=tipos[Math.floor(Math.random()*tipos.length)];
+  let texto,respuesta;
+  const m1f=m1.toFixed(1),m2f=m2.toFixed(1);
+  if(tipo==='aceleracion'){
+    texto=`Con m₁=${m1f} kg y m₂=${m2f} kg, ¿cuál es la aceleración del sistema (m/s²)? [a=(m₁−m₂)g/(m₁+m₂)]`;
+    respuesta=acel;
+  } else {
+    texto=`Con m₁=${m1f} kg y m₂=${m2f} kg, ¿cuál es la tensión de la cuerda (N)? [T=2m₁m₂g/(m₁+m₂)]`;
+    respuesta=tension;
+  }
+  preguntaActual={respuesta};
+  document.getElementById('preguntaText').textContent=texto;
+  document.getElementById('feedbackBox').className='feedback-box';
+  document.getElementById('respuestaInput').value='';
+}
+
+function verificar(){
+  if(!preguntaActual)return;
+  const usr=parseFloat(document.getElementById('respuestaInput').value);
+  if(isNaN(usr)){alert('Ingresa un número.');return;}
+  const tol=Math.abs(preguntaActual.respuesta)*0.02+0.01;
+  const fb=document.getElementById('feedbackBox');
+  if(Math.abs(usr-preguntaActual.respuesta)<=tol){
+    fb.className='feedback-box correct';
+    fb.textContent=`✓ ¡Correcto! Respuesta: ${preguntaActual.respuesta.toFixed(4)}`;
+  } else {
+    fb.className = 'feedback-box wrong';
+    fb.textContent = `✗ Incorrecto. Respuesta correcta: ${preguntaActual.respuesta.toFixed(4)}`;
+  }
+}
+</script>
+<script src="../assets/js/chatbot.js?v=7"></script>
+<script>
+  const bot = new PhysicsChatBot({
+    simulationName: 'Máquina de Atwood',
+    topic: 'atwood',
+    getState: () => ({
+      tiempo,
+      m1,
+      m2,
+      aceleracion: acel,
+      tension,
+      velocidad: vel,
+      posicion1: pos1,
+      posicion2: pos2
+    })
+  });
+</script>
+<script src="../assets/js/audio.js?v=4"></script>
+<script src="../assets/js/cursor.js"></script>
+</body>
+</html>
