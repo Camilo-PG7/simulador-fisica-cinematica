@@ -20,6 +20,7 @@ class PhysicsChatBot {
     this.history = []; // { role: 'user'|'model', parts: [{text}] }
     this.isOpen = false;
     this.isSending = false;
+    this.provider = localStorage.getItem('chatbot_provider') || 'gemini'; // 'gemini' | 'groq' | 'offline'
 
     this._injectDOM();
     this._bindEvents();
@@ -70,6 +71,11 @@ class PhysicsChatBot {
           <div class="chatbot-header-subtitle">
             <span class="chatbot-header-status"></span>
             ${this._escapeHtml(this.simulationName)}
+          </div>
+          <div class="chatbot-provider-selector" id="chatbotProviderSelector">
+            <div class="chatbot-provider-tab ${this.provider === 'gemini' ? 'active' : ''}" data-provider="gemini" title="Gemini 2.0 Flash">Gemini</div>
+            <div class="chatbot-provider-tab ${this.provider === 'groq' ? 'active' : ''}" data-provider="groq" title="Llama 3.3 70B (Groq)">Groq ✨</div>
+            <div class="chatbot-provider-tab ${this.provider === 'offline' ? 'active' : ''}" data-provider="offline" title="Motor Físico Local">Offline</div>
           </div>
         </div>
         <button class="chatbot-btn-close" id="chatbotClose" aria-label="Cerrar chat">✕</button>
@@ -124,6 +130,32 @@ class PhysicsChatBot {
     this.inputEl.addEventListener('input', () => {
       this.inputEl.style.height = 'auto';
       this.inputEl.style.height = Math.min(this.inputEl.scrollHeight, 100) + 'px';
+    });
+
+    // Provider Selector
+    const tabs = document.querySelectorAll('.chatbot-provider-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Update state
+        this.provider = tab.dataset.provider;
+        localStorage.setItem('chatbot_provider', this.provider);
+        
+        // Update UI
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Reset offline status badge class if switching away from offline fallback
+        const statusEl = document.querySelector('.chatbot-header-status');
+        if (statusEl) {
+          if (this.provider === 'offline') {
+            statusEl.classList.add('offline');
+            statusEl.setAttribute('title', 'Motor Físico Local');
+          } else {
+            statusEl.classList.remove('offline');
+            statusEl.removeAttribute('title');
+          }
+        }
+      });
     });
   }
 
@@ -271,11 +303,19 @@ class PhysicsChatBot {
     this._scrollToBottom();
 
     try {
-      const response = await this._callGemini(text);
+      let response;
+      if (this.provider === 'groq') {
+        response = await this._callGroq(text);
+      } else if (this.provider === 'gemini') {
+        response = await this._callGemini(text);
+      } else {
+        throw new Error('Offline forced');
+      }
       this.typingEl.classList.remove('active');
       this._addMessage('bot', response);
     } catch (err) {
       console.warn('[Chatbot] Conexión fallida o error de cuota. Activando Asistente Físico Offline de respaldo.', err);
+
       
       // Activar indicador visual offline en el header
       const statusEl = document.querySelector('.chatbot-header-status');
@@ -378,6 +418,93 @@ class PhysicsChatBot {
 
 
 
+
+  // ═══════════════════════════════════════════════════════════
+  //  GROQ API CALL (Llama 3.3 70B)
+  // ═══════════════════════════════════════════════════════════
+
+  async _callGroq(userMessage) {
+    if (typeof GROQ_API_KEY === 'undefined' || GROQ_API_KEY === 'TU_API_KEY_AQUI') {
+      throw new Error('GROQ_API_KEY no configurada');
+    }
+
+    const state = this.getState();
+    const contextStr = this._formatState(state);
+    const systemPrompt = this._buildSystemPrompt(contextStr);
+
+    const messages = [
+      { role: "system", content: systemPrompt }
+    ];
+
+    // Convert internal history to OpenAI format
+    for (const msg of this.history) {
+      messages.push({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.parts[0].text
+      });
+    }
+
+    // Add user message to history
+    this.history.push({
+      role: 'user',
+      parts: [{ text: `[Estado actual de la simulación]\n${contextStr}\n\n[Pregunta del estudiante]\n${userMessage}` }]
+    });
+
+    if (this.history.length > 20) {
+      this.history = this.history.slice(-20);
+    }
+
+    // Include the new user message in the Groq request
+    messages.push({
+      role: 'user',
+      content: `[Estado actual de la simulación]\n${contextStr}\n\n[Pregunta del estudiante]\n${userMessage}`
+    });
+
+    const url = 'https://api.groq.com/openai/v1/chat/completions';
+    
+    const body = {
+      model: "llama-3.3-70b-versatile",
+      messages: messages,
+      temperature: 0.6,
+      max_completion_tokens: 1024,
+      top_p: 0.9,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errData = await res.text();
+        throw new Error(`${res.status}: ${errData}`);
+      }
+
+      const data = await res.json();
+      const responseText = data.choices[0].message.content;
+      
+      // Save assistant response to history
+      this.history.push({
+        role: 'model',
+        parts: [{ text: responseText }]
+      });
+
+      return responseText || 'Sin respuesta del modelo.';
+    } catch (fetchErr) {
+      clearTimeout(timeoutId);
+      throw fetchErr;
+    }
+  }
 
   // ═══════════════════════════════════════════════════════════
   //  SYSTEM PROMPT — Marco Teórico
