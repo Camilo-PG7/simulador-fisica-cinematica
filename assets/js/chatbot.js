@@ -391,7 +391,7 @@ class PhysicsChatBot {
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500); // 3.5 segundos de límite para cuota/red lenta
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos de límite para la red
 
     try {
       const res = await fetch(url, {
