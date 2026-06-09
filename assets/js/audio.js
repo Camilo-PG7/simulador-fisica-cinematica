@@ -1,10 +1,25 @@
 /**
- * audio.js — Procedural SFX Engine (Web Audio API)
+ * audio.js — Procedural SFX Engine v5 (Web Audio API)
  *
- * Root cause fix: AudioContext.resume() is async. The previous version called
- * playSound() immediately after resume(), before the context was actually running.
- * This version uses async/await to guarantee the context is "running" before
- * any sound node is scheduled. All user-gesture handlers are made async.
+ * Complete rewrite for maximum reliability.
+ *
+ * ROOT CAUSE OF PREVIOUS FAILURES:
+ *   1. Gesture listeners were on `document.body` which might not exist when
+ *      the script loads, causing all event registrations to silently fail.
+ *   2. `_autoResume()` called `ctx.resume()` from physics loops (non-gesture
+ *      code). Browsers IGNORE resume() calls outside real user gestures,
+ *      so the context stayed suspended forever.
+ *   3. HTML files cached the old version via `?v=4` query parameter.
+ *
+ * DESIGN PRINCIPLES OF THIS VERSION:
+ *   - Boot IMMEDIATELY at script parse time (no DOMContentLoaded dependency).
+ *   - All gesture listeners on `document` (always exists, even before <body>).
+ *   - `_unlock()` creates + resumes AudioContext ONLY inside real user gestures.
+ *   - Public sound API only plays when context is confirmed running; never
+ *     tries to schedule nodes on a suspended context.
+ *   - Handles tab-switch suspension via visibilitychange.
+ *   - try-catch around all Web Audio node creation to prevent exceptions
+ *     from crashing the simulation.
  */
 
 class SFX {
@@ -12,72 +27,62 @@ class SFX {
   static masterGain = null;
   static isMuted    = localStorage.getItem('sim_muted') === 'true';
 
-  // Wind nodes
+  // Wind nodes (continuous sound)
   static windNode   = null;
   static windGain   = null;
   static windFilter = null;
 
-  static hooksInitialized = false;
+  static _booted = false;
 
-  static _initContextSync() {
-    if (this.ctx) return true;
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return false;
-      this.ctx = new AC();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.connect(this.ctx.destination);
-      this.masterGain.gain.value = this.isMuted ? 0 : 0.5;
-      return true;
-    } catch (e) {
-      console.warn('[SFX] Web Audio API not supported.', e);
-      return false;
-    }
-  }
+  // ═══════════════════════════════════════════════════════════════════════
+  //  UNLOCK — called on EVERY user gesture to create/resume AudioContext
+  // ═══════════════════════════════════════════════════════════════════════
 
-  static _autoResume() {
-    this._initContextSync();
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(e => console.warn('[SFX] Auto-resume failed:', e));
-    }
-  }
-
-  // ─── Core: ensure AudioContext is created AND running ─────────────────────
-  // This is the only place that interacts with browser autoplay policy.
-  // Must be called from within a user-gesture handler.
-  static async _ensureRunning() {
-    if (!this._initContextSync()) return false;
-
-    if (this.ctx.state === 'suspended') {
+  static _unlock() {
+    // 1. Create context if it doesn't exist
+    if (!this.ctx) {
       try {
-        await this.ctx.resume();
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        this.ctx = new AC();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.connect(this.ctx.destination);
+        this.masterGain.gain.value = this.isMuted ? 0 : 0.5;
       } catch (e) {
-        console.warn('[SFX] Could not resume AudioContext.', e);
-        return false;
+        console.warn('[SFX] Could not create AudioContext:', e);
+        return;
       }
     }
 
-    return this.ctx.state === 'running';
+    // 2. Resume if suspended (must be inside a gesture handler to work)
+    if (this.ctx.state !== 'running') {
+      this.ctx.resume().catch(() => {});
+    }
   }
 
-  // ─── Mute toggle ──────────────────────────────────────────────────────────
-  static async toggleMute() {
+  // ═══════════════════════════════════════════════════════════════════════
+  //  MUTE TOGGLE
+  // ═══════════════════════════════════════════════════════════════════════
+
+  static toggleMute() {
     this.isMuted = !this.isMuted;
     localStorage.setItem('sim_muted', this.isMuted);
 
-    if (!this.isMuted) {
-      // Un-muting: ensure context is running before setting gain
-      const running = await this._ensureRunning();
-      if (running && this.masterGain) {
-        this.masterGain.gain.setTargetAtTime(0.5, this.ctx.currentTime, 0.05);
-        this.playClick(); // confirm with sound
-      }
-    } else {
-      // Muting: just drop gain, no context needed
-      if (this.masterGain) {
-        this.masterGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
-      }
+    // This is a user gesture → unlock the context
+    this._unlock();
+
+    if (this.masterGain && this.ctx) {
+      const target = this.isMuted ? 0 : 0.5;
+      try {
+        this.masterGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.05);
+      } catch(e) { /* ignore */ }
+    }
+
+    if (this.isMuted) {
       this.stopWind();
+    } else {
+      // Confirmation beep after un-muting (slight delay for context to activate)
+      requestAnimationFrame(() => this.playClick());
     }
 
     this.updateMuteButtons();
@@ -91,197 +96,223 @@ class SFX {
     });
   }
 
-  // ─── Sound primitives ─────────────────────────────────────────────────────
-  // These do NOT check ctx.state — callers must ensure context is running first.
+  // ═══════════════════════════════════════════════════════════════════════
+  //  SOUND PRIMITIVES — wrapped in try-catch, never throw
+  // ═══════════════════════════════════════════════════════════════════════
 
-  static _playHoverRaw() {
-    const t = this.ctx.currentTime;
-    const osc  = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, t);
-    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.05);
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.04, t + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start(t);
-    osc.stop(t + 0.12);
+  static _scheduleHover() {
+    try {
+      const t = this.ctx.currentTime;
+      const osc  = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, t);
+      osc.frequency.exponentialRampToValueAtTime(1200, t + 0.05);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.04, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.12);
+    } catch(e) { /* swallow */ }
   }
 
-  static _playClickRaw() {
-    const t = this.ctx.currentTime;
-    const osc  = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(600, t);
-    osc.frequency.exponentialRampToValueAtTime(200, t + 0.05);
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.18, t + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start(t);
-    osc.stop(t + 0.15);
+  static _scheduleClick() {
+    try {
+      const t = this.ctx.currentTime;
+      const osc  = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, t);
+      osc.frequency.exponentialRampToValueAtTime(200, t + 0.05);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.18, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.15);
+    } catch(e) { /* swallow */ }
   }
 
-  static _playThudRaw(intensity = 1.0) {
-    const t = this.ctx.currentTime;
-    const osc  = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(150, t);
-    osc.frequency.exponentialRampToValueAtTime(30, t + 0.12);
-    const maxGain = Math.min(0.8, 0.3 * intensity);
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(maxGain, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start(t);
-    osc.stop(t + 0.38);
+  static _scheduleThud(intensity = 1.0) {
+    try {
+      const t = this.ctx.currentTime;
+      const osc  = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.exponentialRampToValueAtTime(30, t + 0.12);
+      const maxGain = Math.min(0.8, 0.3 * intensity);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(maxGain, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + 0.38);
+    } catch(e) { /* swallow */ }
   }
 
-  // ─── Public sound API ─────────────────────────────────────────────────────
-  // These are safe to call from physics hooks (outside gesture handlers).
-  // They automatically try to resume the context in the background.
+  // ═══════════════════════════════════════════════════════════════════════
+  //  PUBLIC SOUND API
+  //  Only plays when context is confirmed running. Safe to call anytime.
+  // ═══════════════════════════════════════════════════════════════════════
 
   static playClick() {
-    if (this.isMuted) return;
-    this._autoResume();
-    if (!this.ctx) return;
-    this._playClickRaw();
+    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    this._scheduleClick();
   }
 
   static playHover() {
-    if (this.isMuted) return;
-    this._autoResume();
-    if (!this.ctx) return;
-    this._playHoverRaw();
+    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    this._scheduleHover();
   }
 
   static playThud(intensity = 1.0) {
-    if (this.isMuted) return;
-    this._autoResume();
-    if (!this.ctx) return;
-    this._playThudRaw(intensity);
+    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
+    this._scheduleThud(intensity);
   }
 
-  // Wind: continuous filtered noise
   static playWind(velocity) {
-    if (this.isMuted) return;
-    this._autoResume();
-    if (!this.ctx) return;
+    if (this.isMuted || !this.ctx || this.ctx.state !== 'running') return;
 
     if (!this.windNode) {
-      const bufferSize = this.ctx.sampleRate * 2;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      try {
+        const bufferSize = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
 
-      this.windNode = this.ctx.createBufferSource();
-      this.windNode.buffer = buffer;
-      this.windNode.loop = true;
+        this.windNode = this.ctx.createBufferSource();
+        this.windNode.buffer = buffer;
+        this.windNode.loop = true;
 
-      this.windFilter = this.ctx.createBiquadFilter();
-      this.windFilter.type = 'bandpass';
-      this.windFilter.Q.value = 1.5;
+        this.windFilter = this.ctx.createBiquadFilter();
+        this.windFilter.type = 'bandpass';
+        this.windFilter.Q.value = 1.5;
 
-      this.windGain = this.ctx.createGain();
-      this.windGain.gain.value = 0;
+        this.windGain = this.ctx.createGain();
+        this.windGain.gain.value = 0;
 
-      this.windNode.connect(this.windFilter);
-      this.windFilter.connect(this.windGain);
-      this.windGain.connect(this.masterGain);
-      this.windNode.start();
+        this.windNode.connect(this.windFilter);
+        this.windFilter.connect(this.windGain);
+        this.windGain.connect(this.masterGain);
+        this.windNode.start();
+      } catch(e) { return; }
     }
 
-    const clamped = Math.max(0, Math.min(50, velocity));
-    const t = this.ctx.currentTime;
-    this.windFilter.frequency.setTargetAtTime(200 + clamped * 25, t, 0.1);
-    this.windGain.gain.setTargetAtTime(
-      clamped > 1 ? Math.min(0.3, clamped * 0.015) : 0, t, 0.1
-    );
+    try {
+      const clamped = Math.max(0, Math.min(50, velocity));
+      const t = this.ctx.currentTime;
+      this.windFilter.frequency.setTargetAtTime(200 + clamped * 25, t, 0.1);
+      this.windGain.gain.setTargetAtTime(
+        clamped > 1 ? Math.min(0.3, clamped * 0.015) : 0, t, 0.1
+      );
+    } catch(e) { /* swallow */ }
   }
 
   static stopWind() {
-    if (this.windGain && this.ctx) {
-      this.windGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
-    }
+    try {
+      if (this.windGain && this.ctx) {
+        this.windGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1);
+      }
+    } catch(e) { /* swallow */ }
   }
 
-  // ─── Global UI hooks ──────────────────────────────────────────────────────
-  static initGlobalUIHooks() {
-    if (this.hooksInitialized) return;
-    this.hooksInitialized = true;
+  // ═══════════════════════════════════════════════════════════════════════
+  //  BOOT — called ONCE at script parse time (no DOM dependency)
+  // ═══════════════════════════════════════════════════════════════════════
 
-    const getInteractiveAncestor = (el) => {
-      while (el && el !== document.body) {
+  static boot() {
+    if (this._booted) return;
+    this._booted = true;
+
+    // ── 1. Gesture unlock handler ─────────────────────────────────────
+    //    Called on EVERY user gesture. Creates + resumes AudioContext.
+    const onGesture = () => {
+      if (!SFX.isMuted) {
+        SFX._unlock();
+      }
+    };
+
+    //    Register on `document` (always exists, even before <body> is parsed).
+    //    Using capture phase so we fire before any other handler.
+    ['mousedown', 'pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+      document.addEventListener(evt, onGesture, { capture: true, passive: true });
+    });
+
+    // ── 2. Interactive element detection (walks up DOM tree) ──────────
+    const getInteractive = (el) => {
+      let depth = 0;
+      while (el && el !== document.body && depth < 10) {
         if (
           el.tagName === 'BUTTON' ||
           el.tagName === 'A' ||
           el.tagName === 'SELECT' ||
+          el.tagName === 'LABEL' ||
           (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'))
         ) {
           return el;
         }
         el = el.parentElement;
+        depth++;
       }
       return null;
     };
 
-    let lastHoveredInteractiveEl = null;
-
-    // Hover sound (only plays if context is already active or we auto-resume it)
-    document.body.addEventListener('mouseenter', (e) => {
+    // ── 3. Click sound on interactive elements ───────────────────────
+    //    Uses requestAnimationFrame to give _unlock() one frame to
+    //    take effect on the very first interaction after page load.
+    document.addEventListener('pointerdown', (e) => {
       if (SFX.isMuted) return;
-      const interactiveEl = getInteractiveAncestor(e.target);
-      if (interactiveEl) {
-        if (interactiveEl !== lastHoveredInteractiveEl) {
-          lastHoveredInteractiveEl = interactiveEl;
-          SFX.playHover();
-        }
-      } else if (e.target && e.target.classList && e.target.classList.contains('param-group')) {
-        if (e.target !== lastHoveredInteractiveEl) {
-          lastHoveredInteractiveEl = e.target;
-          SFX.playHover();
-        }
-      } else {
-        lastHoveredInteractiveEl = null;
+      if (getInteractive(e.target)) {
+        requestAnimationFrame(() => SFX.playClick());
+      }
+    }, { capture: true, passive: true });
+
+    // ── 4. Hover sounds ──────────────────────────────────────────────
+    let lastHoverEl = null;
+    document.addEventListener('mouseover', (e) => {
+      if (SFX.isMuted) return;
+      const interactive = getInteractive(e.target);
+      const paramGroup = (e.target && e.target.classList && e.target.classList.contains('param-group'))
+        ? e.target : null;
+      const target = interactive || paramGroup;
+      if (target && target !== lastHoverEl) {
+        lastHoverEl = target;
+        SFX.playHover();
+      } else if (!target) {
+        lastHoverEl = null;
       }
     }, true);
 
-    // Auto-resume helper for general user gestures
-    const resumeOnGesture = async () => {
-      if (SFX.isMuted) return;
-      await SFX._ensureRunning();
-    };
-
-    // Register resume triggers for all common user gestures (including keyboard navigations)
-    ['click', 'keydown', 'pointerdown', 'touchstart'].forEach(eventName => {
-      document.body.addEventListener(eventName, resumeOnGesture, { passive: true, capture: true });
+    // ── 5. Tab visibility handler ────────────────────────────────────
+    //    When the user leaves and returns to the tab, the browser may
+    //    have suspended the AudioContext. We flag it for re-unlock on
+    //    the next gesture.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && SFX.ctx &&
+          SFX.ctx.state === 'suspended' && !SFX.isMuted) {
+        // Try to resume; may fail outside gesture, but will succeed
+        // on the next click/keydown thanks to the gesture listeners.
+        SFX.ctx.resume().catch(() => {});
+      }
     });
 
-    // Play click sound on interactive element pointerdown
-    document.body.addEventListener('pointerdown', (e) => {
-      if (SFX.isMuted) return;
-      const interactiveEl = getInteractiveAncestor(e.target);
-      if (interactiveEl) {
-        SFX.playClick();
-      }
-    }, { passive: true, capture: true });
+    // ── 6. Update mute buttons when DOM is ready ─────────────────────
+    const initButtons = () => SFX.updateMuteButtons();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initButtons);
+    } else {
+      initButtons();
+    }
   }
 }
 
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-const bootSFX = () => {
-  SFX.updateMuteButtons();
-  SFX.initGlobalUIHooks();
-};
-
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', bootSFX);
-} else {
-  bootSFX();
-}
+// ═══════════════════════════════════════════════════════════════════════════════
+//  BOOT IMMEDIATELY — do NOT wait for DOMContentLoaded.
+//  `document` always exists at script parse time.
+// ═══════════════════════════════════════════════════════════════════════════════
+SFX.boot();
