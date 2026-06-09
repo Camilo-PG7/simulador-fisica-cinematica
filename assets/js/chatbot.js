@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════
  *  CHATBOT EDUCATIVO DE FÍSICA
  *  Módulo compartido para todos los simuladores
- *  Usa Gemini 2.0 Flash via REST API
+ *  Usa Gemini 3.5 Flash via REST API
  * ═══════════════════════════════════════════════════════════
  */
 
@@ -73,7 +73,7 @@ class PhysicsChatBot {
             ${this._escapeHtml(this.simulationName)}
           </div>
           <div class="chatbot-provider-selector" id="chatbotProviderSelector">
-            <div class="chatbot-provider-tab ${this.provider === 'gemini' ? 'active' : ''}" data-provider="gemini" title="Gemini 2.0 Flash">Gemini</div>
+            <div class="chatbot-provider-tab ${this.provider === 'gemini' ? 'active' : ''}" data-provider="gemini" title="Gemini 3.5 Flash">Gemini</div>
             <div class="chatbot-provider-tab ${this.provider === 'groq' ? 'active' : ''}" data-provider="groq" title="Llama 3.3 70B (Groq)">Groq ✨</div>
             <div class="chatbot-provider-tab ${this.provider === 'offline' ? 'active' : ''}" data-provider="offline" title="Motor Físico Local">Offline</div>
           </div>
@@ -316,8 +316,13 @@ class PhysicsChatBot {
     } catch (err) {
       console.warn('[Chatbot] Conexión fallida o error de API.', err);
       
+      let errorMessage = err.message || String(err);
+      if (err.name === 'AbortError' || errorMessage.toLowerCase().includes('abort') || errorMessage.toLowerCase().includes('aborted')) {
+        errorMessage = 'Tiempo de espera agotado (el servidor tardó más de 20 segundos en responder).';
+      }
+      
       // Mostrar el error real en la consola de mensajes para depuración
-      this._addMessage('error', `**Error de API:** ${err.message}\n\n*Activando Asistente Offline de respaldo...*`);
+      this._addMessage('error', `**Error de API:** ${errorMessage}\n\n*Activando Asistente Offline de respaldo...*`);
 
       // Activar indicador visual offline en el header
       const statusEl = document.querySelector('.chatbot-header-status');
@@ -372,7 +377,13 @@ class PhysicsChatBot {
       this.history = this.history.slice(-20);
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+    // List of models to try in sequence if one experiences 503 / high demand or quota issues
+    const modelsToTry = [
+      'gemini-3.5-flash',
+      'gemini-flash-lite-latest',
+      'gemini-3.1-flash-lite',
+      'gemini-flash-latest'
+    ];
 
     const body = {
       system_instruction: {
@@ -392,29 +403,47 @@ class PhysicsChatBot {
       ]
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos de límite para la red
+    let lastError = null;
 
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+    for (const modelName of modelsToTry) {
+      console.log(`[Chatbot] Intentando conectar con Gemini usando el modelo: ${modelName}`);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
 
-      if (!res.ok) {
-        const errData = await res.text();
-        throw new Error(`${res.status}: ${errData}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos por intento
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const errData = await res.text();
+          throw new Error(`${res.status}: ${errData}`);
+        }
+
+        const data = await res.json();
+        const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (responseText) {
+          console.log(`[Chatbot] Conexión exitosa con el modelo: ${modelName}`);
+          return responseText;
+        } else {
+          throw new Error('Respuesta del modelo vacía o estructura de datos inesperada.');
+        }
+      } catch (err) {
+        clearTimeout(timeoutId);
+        console.warn(`[Chatbot] Falló el intento con el modelo ${modelName}:`, err.message || err);
+        lastError = err;
+        // Si el error es 503, 429, o AbortError, el bucle continúa probando el siguiente modelo
       }
-
-      const data = await res.json();
-      return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta del modelo.';
-    } catch (fetchErr) {
-      clearTimeout(timeoutId);
-      throw fetchErr;
     }
+
+    // Si todos los modelos fallaron, lanzamos el último error capturado para activar el fallback offline
+    throw lastError || new Error('No se pudo conectar con ningún modelo de Gemini disponible.');
   }
 
 
