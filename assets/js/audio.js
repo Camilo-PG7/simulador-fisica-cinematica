@@ -216,18 +216,39 @@ class SFX {
     if (this.hooksInitialized) return;
     this.hooksInitialized = true;
 
-    const isInteractive = (el) =>
-      el && (
-        el.tagName === 'BUTTON' ||
-        el.tagName === 'A' ||
-        el.tagName === 'SELECT' ||
-        (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'))
-      );
+    const getInteractiveAncestor = (el) => {
+      while (el && el !== document.body) {
+        if (
+          el.tagName === 'BUTTON' ||
+          el.tagName === 'A' ||
+          el.tagName === 'SELECT' ||
+          (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'))
+        ) {
+          return el;
+        }
+        el = el.parentElement;
+      }
+      return null;
+    };
+
+    let lastHoveredInteractiveEl = null;
 
     // Hover sound (only plays if context is already active or we auto-resume it)
     document.body.addEventListener('mouseenter', (e) => {
-      if (isInteractive(e.target) || e.target?.classList?.contains('param-group')) {
-        SFX.playHover();
+      if (SFX.isMuted) return;
+      const interactiveEl = getInteractiveAncestor(e.target);
+      if (interactiveEl) {
+        if (interactiveEl !== lastHoveredInteractiveEl) {
+          lastHoveredInteractiveEl = interactiveEl;
+          SFX.playHover();
+        }
+      } else if (e.target && e.target.classList && e.target.classList.contains('param-group')) {
+        if (e.target !== lastHoveredInteractiveEl) {
+          lastHoveredInteractiveEl = e.target;
+          SFX.playHover();
+        }
+      } else {
+        lastHoveredInteractiveEl = null;
       }
     }, true);
 
@@ -245,7 +266,8 @@ class SFX {
     // Play click sound on interactive element pointerdown
     document.body.addEventListener('pointerdown', (e) => {
       if (SFX.isMuted) return;
-      if (isInteractive(e.target)) {
+      const interactiveEl = getInteractiveAncestor(e.target);
+      if (interactiveEl) {
         SFX.playClick();
       }
     }, { passive: true, capture: true });
@@ -253,7 +275,13 @@ class SFX {
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+const bootSFX = () => {
   SFX.updateMuteButtons();
   SFX.initGlobalUIHooks();
-});
+};
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootSFX);
+} else {
+  bootSFX();
+}
