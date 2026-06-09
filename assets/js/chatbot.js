@@ -314,9 +314,11 @@ class PhysicsChatBot {
       this.typingEl.classList.remove('active');
       this._addMessage('bot', response);
     } catch (err) {
-      console.warn('[Chatbot] Conexión fallida o error de cuota. Activando Asistente Físico Offline de respaldo.', err);
-
+      console.warn('[Chatbot] Conexión fallida o error de API.', err);
       
+      // Mostrar el error real en la consola de mensajes para depuración
+      this._addMessage('error', `**Error de API:** ${err.message}\n\n*Activando Asistente Offline de respaldo...*`);
+
       // Activar indicador visual offline en el header
       const statusEl = document.querySelector('.chatbot-header-status');
       if (statusEl) {
@@ -370,7 +372,7 @@ class PhysicsChatBot {
       this.history = this.history.slice(-20);
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const body = {
       system_instruction: {
