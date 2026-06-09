@@ -19,25 +19,35 @@ class SFX {
 
   static hooksInitialized = false;
 
+  static _initContextSync() {
+    if (this.ctx) return true;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      this.ctx = new AC();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.connect(this.ctx.destination);
+      this.masterGain.gain.value = this.isMuted ? 0 : 0.5;
+      return true;
+    } catch (e) {
+      console.warn('[SFX] Web Audio API not supported.', e);
+      return false;
+    }
+  }
+
+  static _autoResume() {
+    this._initContextSync();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(e => console.warn('[SFX] Auto-resume failed:', e));
+    }
+  }
+
   // ─── Core: ensure AudioContext is created AND running ─────────────────────
   // This is the only place that interacts with browser autoplay policy.
-  // Must be called from within a user-gesture handler (click/mousedown/touchstart).
+  // Must be called from within a user-gesture handler.
   static async _ensureRunning() {
-    // 1. Create context if it doesn't exist yet
-    if (!this.ctx) {
-      try {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        this.ctx = new AC();
-        this.masterGain = this.ctx.createGain();
-        this.masterGain.connect(this.ctx.destination);
-        this.masterGain.gain.value = this.isMuted ? 0 : 0.5;
-      } catch (e) {
-        console.warn('[SFX] Web Audio API not supported.', e);
-        return false;
-      }
-    }
+    if (!this._initContextSync()) return false;
 
-    // 2. If suspended (browser autoplay policy), resume and WAIT for it
     if (this.ctx.state === 'suspended') {
       try {
         await this.ctx.resume();
@@ -47,7 +57,6 @@ class SFX {
       }
     }
 
-    // 3. Only return true when context is confirmed running
     return this.ctx.state === 'running';
   }
 
@@ -136,26 +145,34 @@ class SFX {
 
   // ─── Public sound API ─────────────────────────────────────────────────────
   // These are safe to call from physics hooks (outside gesture handlers).
-  // They skip playing if context isn't already running to avoid errors.
+  // They automatically try to resume the context in the background.
 
   static playClick() {
-    if (!this.ctx || this.isMuted || this.ctx.state !== 'running') return;
+    if (this.isMuted) return;
+    this._autoResume();
+    if (!this.ctx) return;
     this._playClickRaw();
   }
 
   static playHover() {
-    if (!this.ctx || this.isMuted || this.ctx.state !== 'running') return;
+    if (this.isMuted) return;
+    this._autoResume();
+    if (!this.ctx) return;
     this._playHoverRaw();
   }
 
   static playThud(intensity = 1.0) {
-    if (!this.ctx || this.isMuted || this.ctx.state !== 'running') return;
+    if (this.isMuted) return;
+    this._autoResume();
+    if (!this.ctx) return;
     this._playThudRaw(intensity);
   }
 
   // Wind: continuous filtered noise
   static playWind(velocity) {
-    if (!this.ctx || this.isMuted || this.ctx.state !== 'running') return;
+    if (this.isMuted) return;
+    this._autoResume();
+    if (!this.ctx) return;
 
     if (!this.windNode) {
       const bufferSize = this.ctx.sampleRate * 2;
@@ -200,35 +217,37 @@ class SFX {
     this.hooksInitialized = true;
 
     const isInteractive = (el) =>
-      el.tagName === 'BUTTON' ||
-      el.tagName === 'A' ||
-      el.tagName === 'SELECT' ||
-      (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'));
+      el && (
+        el.tagName === 'BUTTON' ||
+        el.tagName === 'A' ||
+        el.tagName === 'SELECT' ||
+        (el.tagName === 'INPUT' && (el.type === 'range' || el.type === 'checkbox'))
+      );
 
-    // Hover sound (context must already be running — no gesture needed here)
+    // Hover sound (only plays if context is already active or we auto-resume it)
     document.body.addEventListener('mouseenter', (e) => {
-      if (isInteractive(e.target) || e.target.classList?.contains('param-group')) {
+      if (isInteractive(e.target) || e.target?.classList?.contains('param-group')) {
         SFX.playHover();
       }
     }, true);
 
-    // Click/mousedown — async handler so we can await resume()
-    document.body.addEventListener('mousedown', async (e) => {
-      if (SFX.isMuted) return;
-
-      // THIS is the user gesture. Resume context here and await it.
-      const running = await SFX._ensureRunning();
-      if (!running) return;
-
-      if (isInteractive(e.target)) {
-        SFX._playClickRaw(); // use raw since we just confirmed running
-      }
-    }, true);
-
-    // Touch support
-    document.body.addEventListener('touchstart', async (e) => {
+    // Auto-resume helper for general user gestures
+    const resumeOnGesture = async () => {
       if (SFX.isMuted) return;
       await SFX._ensureRunning();
+    };
+
+    // Register resume triggers for all common user gestures (including keyboard navigations)
+    ['click', 'keydown', 'pointerdown', 'touchstart'].forEach(eventName => {
+      document.body.addEventListener(eventName, resumeOnGesture, { passive: true, capture: true });
+    });
+
+    // Play click sound on interactive element pointerdown
+    document.body.addEventListener('pointerdown', (e) => {
+      if (SFX.isMuted) return;
+      if (isInteractive(e.target)) {
+        SFX.playClick();
+      }
     }, { passive: true, capture: true });
   }
 }
