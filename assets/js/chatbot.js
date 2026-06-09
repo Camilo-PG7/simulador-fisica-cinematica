@@ -393,7 +393,7 @@ class PhysicsChatBot {
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos de límite para la red
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 segundos de límite para la red
 
     try {
       const res = await fetch(url, {
@@ -473,7 +473,7 @@ class PhysicsChatBot {
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
     try {
       const res = await fetch(url, {
