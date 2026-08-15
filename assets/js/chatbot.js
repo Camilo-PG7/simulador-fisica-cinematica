@@ -302,20 +302,35 @@ class PhysicsChatBot {
     this.typingEl.classList.add('active');
     this._scrollToBottom();
 
+    // ── Modo Offline directo (sin error) ─────────────────────
+    if (this.provider === 'offline') {
+      await new Promise(resolve => setTimeout(resolve, 500)); // simula pensamiento
+      this.typingEl.classList.remove('active');
+      try {
+        const localResponse = this._getOfflineResponse(text);
+        this._addMessage('bot-offline', localResponse);
+      } catch (localErr) {
+        console.error('[Chatbot] Error en motor offline:', localErr);
+        this._addMessage('error', 'Error inesperado en el motor físico local.');
+      }
+      this.isSending = false;
+      this.sendBtn.disabled = false;
+      return;
+    }
+
+    // ── Llamada a API online (Gemini o Groq) ──────────────────
     try {
       let response;
       if (this.provider === 'groq') {
         response = await this._callGroq(text);
-      } else if (this.provider === 'gemini') {
-        response = await this._callGemini(text);
       } else {
-        throw new Error('Offline forced');
+        response = await this._callGemini(text);
       }
       this.typingEl.classList.remove('active');
       this._addMessage('bot', response);
     } catch (err) {
       console.warn('[Chatbot] Conexión fallida o error de API.', err);
-      
+
       let errorMessage = err.message || String(err);
       if (err.name === 'AbortError' || errorMessage.toLowerCase().includes('abort') || errorMessage.toLowerCase().includes('aborted')) {
         errorMessage = 'Tiempo de espera agotado (el servidor tardó más de 20 segundos en responder).';
