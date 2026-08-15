@@ -1,0 +1,4 @@
+{
+  "buildCommand": "echo \"const GEMINI_API_KEY = '$GEMINI_API_KEY'; const GROQ_API_KEY = '$GROQ_API_KEY';\" > assets/js/env.js",
+  "outputDirectory": "."
+}
