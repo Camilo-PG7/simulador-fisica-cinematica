@@ -393,7 +393,7 @@ class PhysicsChatBot {
       generationConfig: {
         temperature: 0.7,
         topP: 0.9,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
       },
       safetySettings: [
         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
@@ -497,7 +497,7 @@ class PhysicsChatBot {
       model: "llama-3.3-70b-versatile",
       messages: messages,
       temperature: 0.6,
-      max_completion_tokens: 1024,
+      max_completion_tokens: 2048,
       top_p: 0.9,
     };
 
@@ -552,10 +552,10 @@ REGLAS DE COMPORTAMIENTO:
 3. Cuando el estudiante pregunte sobre lo que ocurre en la simulación, usa los datos de estado que se te proporcionan para dar respuestas numéricas específicas.
 4. Incluye las ecuaciones relevantes usando notación matemática LaTeX en formato estándar, utilizando $$ para ecuaciones en bloque y $ para ecuaciones en línea. Por ejemplo: $$x(t) = x_0 + v_0 t + \\frac{1}{2} a t^2$$ o $F = m \\cdot a$. Asegúrate de que las ecuaciones sean correctas y estén bien formateadas.
 5. Si el estudiante comete un error conceptual, corrígelo amablemente con la explicación correcta.
-6. Respuestas concisas pero completas (máximo 200 palabras a menos que se pida una explicación extendida).
+6. Respuestas concisas pero completas. Si la respuesta requiere ecuaciones o varias secciones, extiéndete lo necesario para no dejarla incompleta. NUNCA cortes una ecuación o una frase a la mitad.
 7. Usa negritas (**texto**) para conceptos clave y cursivas (*texto*) o notación matemática para variables.
 8. Si mencionas valores numéricos del estado actual, indícalo claramente como "según la simulación actual".
-9. CONTROL DE CONTEXTO (MANDATORIO): Si el estudiante te hace preguntas fuera de contexto (chistes no relacionados con física, bromas, recetas, política, fútbol, música, videojuegos, programación de software, historias de ficción, tareas de otras asignaturas como historia/biología/química, o cualquier otra cosa no relacionada con la física clásica, las matemáticas aplicadas a la física o esta simulación), debes negarte amablemente a responder. Di algo como: "Como tu Asistente de Física, mi propósito es ayudarte a comprender los conceptos científicos y explorar esta simulación. No puedo responder a preguntas fuera de este ámbito. ¿Tienes alguna duda sobre la física de la simulación actual?"
+9. CONTROL DE CONTEXTO: Si el estudiante hace preguntas completamente ajenas a la física (chistes, política, fútbol, recetas de cocina, videojuegos, etc.), niégate amablemente. SIN EMBARGO, si el estudiante hace un mensaje conversacional o de seguimiento como "continúa", "pasamelo bien", "completa la respuesta", "repite", "¿qué más?", "explícame mejor" o similares, DEBES continuar o completar la explicación anterior de física. Estos no son mensajes fuera de contexto, son parte de la conversación educativa.
 
 MARCO TEÓRICO — CINEMÁTICA Y DINÁMICA:
 
