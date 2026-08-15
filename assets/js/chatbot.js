@@ -728,7 +728,6 @@ Responde basándote en este contexto cuando sea relevante.`;
     } else if (role === 'bot-offline') {
       msg.innerHTML = `<div class="chatbot-offline-badge">💡 Asistente Local (Física Offline)</div><span class="msg-label">🧠 Asistente</span>${this._formatMarkdown(text)}`;
     } else {
-      // Bot: render markdown-like formatting
       msg.innerHTML = `<span class="msg-label">🧠 Asistente</span>${this._formatMarkdown(text)}`;
     }
 
@@ -749,18 +748,17 @@ Responde basándote en este contexto cuando sea relevante.`;
         });
       }
     };
-    
+
     if (window.renderMathInElement) {
       renderMath();
     } else {
-      setTimeout(renderMath, 800); // Wait for scripts to load if this is the first message
+      setTimeout(renderMath, 800);
     }
   }
 
-
   _formatMarkdown(text) {
     if (!text) return '';
-    
+
     // Extract block math to prevent parser interference
     const mathBlocks = [];
     text = text.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
@@ -789,8 +787,9 @@ Responde basándote en este contexto cuando sea relevante.`;
 
     const processInline = (str) => {
       let res = this._escapeHtml(str);
+      // Bold must be replaced before italic to avoid conflict
       res = res.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-      res = res.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      res = res.replace(/(?<!\*|\w)\*(?!\*)(.+?)(?<!\*)\*(?!\*|\w)/g, '<em>$1</em>');
       res = res.replace(/`([^`]+)`/g, '<code>$1</code>');
       return res;
     };
