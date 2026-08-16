@@ -241,7 +241,7 @@ input[type="range"] {
   transition: transform 0.2s, background-color 0.2s;
 }
 input[type="range"]:hover {
-  transform: scaleY(1.5);
+  background: rgba(255,255,255,0.2);
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
