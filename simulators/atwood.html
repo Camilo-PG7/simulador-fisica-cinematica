@@ -223,11 +223,11 @@ function actualizarFisica(){
   pos1+=vel*dt;
   pos2-=vel*dt;
 
-  if(pos1>MAX_DROP || pos2<-MAX_DROP){
-    if(Math.abs(vel) > 0.1 && window.SFX) SFX.playThud(Math.abs(vel) / 5);
-    if(pos1>MAX_DROP) pos1=MAX_DROP;
-    if(pos2<-MAX_DROP) pos2=-MAX_DROP;
-    vel=0;
+  if(Math.abs(pos1)>=MAX_DROP){
+    if(Math.abs(vel)>0.1 && window.SFX) SFX.playThud(Math.min(1, Math.abs(vel) / 5));
+    pos1 = Math.sign(pos1) * MAX_DROP;
+    pos2 = -pos1;
+    vel = 0;
   }
 
   datosCSV.push({t:tiempo,vel,pos1,pos2});
@@ -252,13 +252,14 @@ function mostrarStepEq(){
 
 function dibujarEscena(){
   const cx=width/2;
-  const poleaY=60, poleaR=28;
-  const cuerda_len=height-poleaY-poleaR-30;
-  const pxPerM=cuerda_len/MAX_DROP;
+  const poleaY=55, poleaR=26;
+  const alturaDisponible = height - poleaY - poleaR - 90;
+  const yMid = poleaY + poleaR + alturaDisponible * 0.5;
+  const pxPerM = (alturaDisponible * 0.44) / MAX_DROP;
 
   fill(30,40,70); stroke(0,229,255,80); strokeWeight(2);
-  rectMode(CENTER); rect(cx,poleaY-26,100,16,4); rectMode(CORNER);
-  fill(20,20,30); line(cx,poleaY-18,cx,poleaY);
+  rectMode(CENTER); rect(cx,poleaY-24,100,14,4); rectMode(CORNER);
+  fill(20,20,30); line(cx,poleaY-17,cx,poleaY);
 
   fill(40,50,80); stroke(0,229,255,120); strokeWeight(2);
   ellipse(cx,poleaY,poleaR*2,poleaR*2);
@@ -273,22 +274,22 @@ function dibujarEscena(){
          cx+Math.cos(a)*poleaR*0.85,poleaY+Math.sin(a)*poleaR*0.85);
   }
 
-  const y1=poleaY+poleaR+pos1*pxPerM;
-  const y2=poleaY+poleaR+(-pos2)*pxPerM;
+  const y1=yMid+pos1*pxPerM;
+  const y2=yMid-pos1*pxPerM;
   const cxL=cx-poleaR, cxR=cx+poleaR;
 
   stroke(0,229,255,100); strokeWeight(2);
   line(cxL,poleaY,cxL,y1);
   line(cxR,poleaY,cxR,y2);
 
-  const s1=Math.min(40+m1*2,70);
+  const s1=Math.min(38+m1*1.8,65);
   drawMasa(cxL-s1/2,y1,s1,m1,'rgb(181,123,238)','m₁',acel>0);
 
-  const s2=Math.min(40+m2*2,70);
+  const s2=Math.min(38+m2*1.8,65);
   drawMasa(cxR-s2/2,y2,s2,m2,'rgb(255,159,67)','m₂',acel<0);
 
-  drawVec(cxL,y1,-0,-(tension*1.5),'rgb(255,209,102)','T',true);
-  drawVec(cxR,y2, 0,-(tension*1.5),'rgb(255,209,102)','T',true);
+  drawVec(cxL,y1,0,-(tension*1.4),'rgb(255,209,102)','T',true);
+  drawVec(cxR,y2,0,-(tension*1.4),'rgb(255,209,102)','T',true);
 
   if(Math.abs(vel)>0.02){
     fill(0,229,255,200); noStroke(); textSize(11); textFont('monospace'); textAlign(CENTER);
@@ -346,7 +347,7 @@ const bOpts=(yL)=>({
   plugins:{
     legend:{labels:{color:'rgba(255,255,255,0.4)',font:{size:10,family:"'Space Mono',monospace"},boxWidth:14,boxHeight:2,usePointStyle:true,pointStyle:'line'},position:'top'},
     tooltip:{backgroundColor:'rgba(5,7,15,0.96)',titleColor:'rgba(255,255,255,0.9)',bodyColor:'rgba(255,255,255,0.65)',borderColor:'rgba(181,123,238,0.2)',borderWidth:1,padding:{x:12,y:8},cornerRadius:8,callbacks:{title:i=>`t = ${i[0].label} s`}},
-    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:true,mode:'xy'}}
+    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:false}}
   },
   scales:{
     x:{title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}},ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.02)'},border:{color:'rgba(255,255,255,0.04)'}},

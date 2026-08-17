@@ -284,15 +284,16 @@ function draw() {
 }
 
 function calcEscala() {
-  // originX = 230 keeps content clear of the fixed left panel (~220 px)
-  const margenX = 230, margenY = 50;
+  const isMobile = width <= 850;
+  const margenX = isMobile ? 38 : 230;
+  const margenY = isMobile ? 30 : 50;
   const maxX = Math.max(alcance, 10);
   const maxY = Math.max(hMax + y0ini + 5, 10);
-  const scX  = (width  - margenX - 30) / maxX;
+  const scX  = (width  - margenX - (isMobile ? 18 : 30)) / maxX;
   const scY  = (height - margenY * 2) / maxY;
-  escalaM2px = Math.max(0.1, Math.min(scX, scY, 14));
-  originX = 230;
-  originY = height - 40;
+  escalaM2px = Math.max(0.08, Math.min(scX, scY, 14));
+  originX = margenX;
+  originY = height - (isMobile ? 30 : 40);
 }
 
 function dibujarFondo() {
@@ -318,8 +319,8 @@ function dibujarEjes() {
   line(originX, originY - y0ini*escalaM2px, width-20, originY - y0ini*escalaM2px);
 
   noStroke(); fill(255,255,255,120); textSize(10); textFont('monospace');
-  textAlign(CENTER); text('x (m)', width/2, originY+30);
-  textAlign(LEFT); push(); translate(18, height/2); rotate(-HALF_PI); text('y (m)', 0, 0); pop();
+  textAlign(CENTER); text('x (m)', (originX + width - 20) / 2, originY + 22);
+  textAlign(LEFT); push(); translate(Math.max(12, originX - 24), height/2); rotate(-HALF_PI); text('y (m)', 0, 0); pop();
   textAlign(LEFT);
 }
 
@@ -488,7 +489,7 @@ const baseOpts = (yLabel) => ({
   plugins:{
     legend:{ labels:{ color:'rgba(255,255,255,0.4)', font:{size:10,family:"'Space Mono',monospace"}, boxWidth:14, boxHeight:2, usePointStyle:true, pointStyle:'line' }, position:'top' },
     tooltip:{ backgroundColor:'rgba(5,7,15,0.96)', titleColor:'rgba(255,255,255,0.9)', bodyColor:'rgba(255,255,255,0.65)', borderColor:'rgba(0,229,255,0.2)', borderWidth:1, padding:{x:12,y:8}, cornerRadius:8, callbacks:{ title:i=>`t = ${i[0].label} s` } },
-    zoom:{ zoom:{ wheel:{enabled:true,speed:0.08}, pinch:{enabled:true}, mode:'xy' }, pan:{enabled:true,mode:'xy'} }
+    zoom:{ zoom:{ wheel:{enabled:true,speed:0.08}, pinch:{enabled:true}, mode:'xy' }, pan:{enabled:false} }
   },
   scales:{
     x:{ title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}}, ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0}, grid:{color:'rgba(255,255,255,0.02)'}, border:{color:'rgba(255,255,255,0.04)'} },

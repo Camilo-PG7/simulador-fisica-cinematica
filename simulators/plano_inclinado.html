@@ -411,7 +411,7 @@ const bOpts=(yL)=>({
   plugins:{
     legend:{labels:{color:'rgba(255,255,255,0.4)',font:{size:10,family:"'Space Mono',monospace"},boxWidth:14,boxHeight:2,usePointStyle:true,pointStyle:'line'},position:'top'},
     tooltip:{backgroundColor:'rgba(5,7,15,0.96)',titleColor:'rgba(255,255,255,0.9)',bodyColor:'rgba(255,255,255,0.65)',borderColor:'rgba(0,229,255,0.2)',borderWidth:1,padding:{x:12,y:8},cornerRadius:8,callbacks:{title:i=>`t = ${i[0].label} s`}},
-    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:true,mode:'xy'}}
+    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:false}}
   },
   scales:{
     x:{title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}},ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.02)'},border:{color:'rgba(255,255,255,0.04)'}},
