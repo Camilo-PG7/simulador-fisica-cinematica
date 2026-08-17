@@ -683,3 +683,64 @@
   text-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
 }
 
+/* ── Responsive Mobile (Chatbot) ── */
+@media (max-width: 640px) {
+  .chatbot-fab {
+    bottom: 16px;
+    right: 16px;
+    width: 50px;
+    height: 50px;
+    font-size: 1.35rem;
+  }
+
+  .chatbot-panel {
+    bottom: 74px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    height: calc(100dvh - 90px);
+    max-height: calc(100vh - 90px);
+    border-radius: 16px;
+  }
+
+  .chatbot-header {
+    padding: 12px 14px;
+  }
+  .chatbot-header-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+  .chatbot-header-title {
+    font-size: 0.88rem;
+  }
+  .chatbot-provider-selector {
+    margin-top: 6px;
+    padding: 2px;
+  }
+  .chatbot-provider-tab {
+    font-size: 0.58rem;
+    padding: 4px 6px;
+  }
+  .chatbot-messages {
+    padding: 12px 10px;
+    gap: 10px;
+  }
+  .chatbot-msg {
+    font-size: 0.82rem;
+    padding: 10px 12px;
+    max-width: 94%;
+  }
+  .chatbot-input-container {
+    padding: 8px 10px 10px;
+  }
+  .chatbot-input {
+    font-size: 0.85rem;
+    padding: 9px 12px;
+  }
+  .chatbot-send-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+

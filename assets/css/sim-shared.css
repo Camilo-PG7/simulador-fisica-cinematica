@@ -600,146 +600,252 @@ button.sim-btn:active { transform: scale(0.96); }
 .status-ok      { background: rgba(163,255,107,0.12); color: var(--accent3); border: 1px solid rgba(163,255,107,0.3); }
 .status-warning { background: rgba(255,60,110,0.12);  color: var(--accent2); border: 1px solid rgba(255,60,110,0.3); }
 
-/* ── Responsive ──────────────────────────────────────────────────── */
+/* ── Responsive Architecture (Mobile & Tablet) ────────────────────── */
 
-/* Tablet (800px and below) */
-@media (max-width: 800px) {
+/* Tablet & Mobile (900px and below) */
+@media (max-width: 900px) {
   :root {
-    --panel-w: calc(100vw - 24px);
-    --data-w:  calc(100vw - 24px);
+    --panel-w: 100%;
+    --data-w: 100%;
   }
 
-  .controls, .data-panel {
-    position: relative;
-    top: auto; left: auto; right: auto;
-    width: 100%;
-    max-height: none;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin: 8px 12px;
-    width: calc(100% - 24px);
+  /* Fixed Navigation Controls */
+  #btnVolver {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 400;
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+
+  .btn-mute {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 400 !important;
+    padding: 6px 12px !important;
+    font-size: 0.68rem !important;
+    backdrop-filter: blur(10px);
+    background: rgba(13, 17, 32, 0.88) !important;
   }
 
   .simulation-area {
-    padding-top: 54px; /* space for fixed back button */
+    padding-top: 52px;
     display: flex;
     flex-direction: column;
+    margin-bottom: 20px;
   }
 
-  /* panels appear above canvas */
-  .panels-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    background: var(--bg);
-    padding-bottom: 8px;
+  /* 1. Interactive Canvas on Top */
+  .simulation-container {
+    order: 1;
+    width: 100%;
+    min-height: 280px;
+    height: clamp(280px, 42vh, 420px);
+    margin-bottom: 12px;
+    border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
   }
 
-  /* Panels side-by-side on tablet */
-  @media (min-width: 540px) {
-    .panels-wrapper {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-    .controls, .data-panel {
-      flex: 1 1 44%;
-    }
-  }
-
-  .simulation-container {
-    order: 10;
-  }
-
-  #btnVolver {
-    position: fixed;
-    top: 8px; left: 8px;
-    z-index: 300;
-  }
-
-  .graficas-container {
-    padding: 0 10px;
+  /* 2. Panels Grid below Canvas */
+  .panels-wrapper {
+    order: 2;
+    display: grid;
     grid-template-columns: 1fr;
-  }
-
-  /* Verification section full width */
-  .verificacion-card {
-    padding: 14px 16px;
-  }
-  .respuesta-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .respuesta-input {
-    max-width: 100%;
-  }
-}
-
-/* Mobile (480px and below) */
-@media (max-width: 480px) {
-  :root {
-    --panel-w: calc(100vw - 16px);
-    --data-w:  calc(100vw - 16px);
+    gap: 12px;
+    padding: 0 12px;
+    width: 100%;
+    background: transparent;
+    border-bottom: none;
   }
 
   .controls, .data-panel {
-    margin: 6px 8px;
-    width: calc(100% - 16px);
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(13, 17, 32, 0.95);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Side-by-side panels on medium screens */
+  @media (min-width: 580px) and (max-width: 900px) {
+    .panels-wrapper {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
+
+  /* 3. Graphs Grid */
+  .graficas-container {
+    padding: 0 12px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .grafica-wrapper {
     padding: 12px;
   }
 
-  /* Compact param groups */
-  .param-group { margin-bottom: 10px; }
-  .param-label { font-size: 0.62rem; }
-  .param-value { font-size: 0.66rem; }
-
-  /* Compact data rows */
-  .data-key  { font-size: 0.62rem; }
-  .data-val  { font-size: 0.72rem; }
-
-  /* Larger touch targets for buttons */
-  button.sim-btn {
-    padding: 10px 4px;
-    font-size: 10px;
+  .grafica-content {
+    height: clamp(150px, 26vh, 220px);
   }
 
-  /* Larger sliders for touch */
-  input[type="range"] {
-    height: 6px;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    width: 20px; height: 20px;
-  }
-  input[type="range"]::-moz-range-thumb {
-    width: 20px; height: 20px;
+  /* 4. Verification Section */
+  .verificacion-section {
+    padding: 0 12px 24px;
   }
 
-  .grafica-wrapper { padding: 10px; }
-  .equation { font-size: 0.7rem; }
-  .grafica-content { height: clamp(130px, 24vh, 200px); }
+  .verificacion-card {
+    padding: 14px 16px;
+  }
 
-  /* Back button smaller */
+  .respuesta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .respuesta-input {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .btn-verificar {
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+  }
+}
+
+/* Small Smartphone (480px and below) */
+@media (max-width: 480px) {
   #btnVolver {
     font-size: 10px;
-    padding: 6px 12px;
+    padding: 6px 10px;
   }
 
-  /* Mute button repositioned */
   .btn-mute {
-    top: 8px !important;
-    right: 8px !important;
     font-size: 0.62rem !important;
-    padding: 4px 8px !important;
+    padding: 5px 8px !important;
+  }
+
+  .simulation-area {
+    padding-top: 48px;
+  }
+
+  .simulation-container {
+    min-height: 240px;
+    height: clamp(240px, 38vh, 320px);
+  }
+
+  .panels-wrapper {
+    padding: 0 8px;
+    gap: 10px;
+  }
+
+  .controls, .data-panel {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .param-group {
+    margin-bottom: 10px;
+  }
+
+  .param-label {
+    font-size: 0.64rem;
+  }
+
+  .param-value {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    min-width: 40px;
+  }
+
+  .data-row {
+    padding: 5px 0;
+  }
+
+  .data-key {
+    font-size: 0.64rem;
+  }
+
+  .data-val {
+    font-size: 0.74rem;
+  }
+
+  .info-grid {
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .info-box {
+    padding: 6px 8px;
+  }
+
+  .info-box-label {
+    font-size: 0.54rem;
+  }
+
+  .info-box-val {
+    font-size: 0.78rem;
+  }
+
+  /* Button touch optimization */
+  .btn-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  button.sim-btn {
+    padding: 9px 4px;
+    font-size: 10px;
+  }
+
+  .graficas-container {
+    padding: 0 8px;
+  }
+
+  .grafica-wrapper {
+    padding: 10px;
+  }
+
+  .equation {
+    font-size: 0.68rem;
+  }
+
+  .equation-explanation {
+    font-size: 0.62rem;
   }
 
   .verificacion-section {
-    padding: 0 8px 16px;
+    padding: 0 8px 20px;
   }
+
   .verificacion-card {
     padding: 12px;
-    border-radius: 8px;
   }
-  .pregunta-text { font-size: 0.85rem; }
+
+  .pregunta-text {
+    font-size: 0.82rem;
+  }
 }
 
 /* ── Entrance Animations & Cascaded Staggers ─────────────────────── */

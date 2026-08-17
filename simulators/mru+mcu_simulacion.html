@@ -233,8 +233,17 @@
     }
     .zoom-reset:hover { background: rgba(255,255,255,0.14); color: white; }
 
-    @media (max-width: 600px) {
-      .main-container { padding: 66px 12px 30px; }
+    @media (max-width: 768px) {
+      .main-container { padding: 60px 12px 30px; }
+      #btnVolver { top: 10px; left: 10px; font-size: 10px; padding: 6px 12px; }
+      .btn-mute { top: 10px !important; right: 10px !important; font-size: 0.65rem !important; padding: 5px 10px !important; }
+      h1 { font-size: 1.35rem; margin-top: 10px; margin-bottom: 14px; }
+      .formula-box { padding: 12px 14px; margin-bottom: 16px; }
+      .formula { font-size: 0.95rem; }
+      .controls { padding: 12px 14px; margin-bottom: 18px; }
+      .chart-container { grid-template-columns: 1fr; gap: 14px; }
+      .chart-wrapper { padding: 12px 10px; }
+      .chart-inner { height: clamp(140px, 26vh, 200px); }
     }
 
     /* ── Entrance Animations & Cascaded Staggers ─────────────────────── */
