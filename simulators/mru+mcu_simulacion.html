@@ -217,7 +217,8 @@
     .badge-green { color: #43e9be; background: rgba(67,233,190,0.1); }
     .badge-amber { color: #ffb74d; background: rgba(255,183,77,0.1);  }
 
-    .chart-inner { height: clamp(150px,24vh,240px); position: relative; }
+    .chart-inner { height: clamp(150px,24vh,240px); position: relative; touch-action: pan-y !important; }
+    .chart-inner canvas { touch-action: pan-y !important; }
 
     .chart-hint {
       text-align: center; font-size: 0.65em; color: rgba(255,255,255,0.18);
@@ -721,7 +722,7 @@
         pinch: { enabled: true },
         mode: 'xy',
         onZoom({chart}) {
-          const wrapper = chart.canvas.closest('.grafica-wrapper, .chart-wrapper, .chart-inner, .chart-container');
+          const wrapper = chart.canvas.closest('.chart-wrapper, .grafica-wrapper');
           if (wrapper) {
             const btn = wrapper.querySelector('.zoom-reset');
             if (btn) btn.style.display = 'block';

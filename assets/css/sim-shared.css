@@ -165,7 +165,7 @@ body::before {
 
 /* ── Control panels (fixed desktop, stacked mobile) ─────────────── */
 .controls, .data-panel {
-  position: fixed;
+  position: absolute;
   top: 10px;
   background: rgba(13,17,32,0.94);
   backdrop-filter: blur(14px);
