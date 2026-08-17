@@ -129,6 +129,7 @@
         <span class="chart-badge badge-cyan" id="badgeX">— m</span>
       </div>
       <div class="grafica-content"><canvas id="chartX"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartX, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">x(t) = v₀·cos(θ)·t</p>
         <p class="equation-explanation">Movimiento horizontal uniforme (sin resistencia)</p>
@@ -141,6 +142,7 @@
         <span class="chart-badge badge-rose" id="badgeY">— m</span>
       </div>
       <div class="grafica-content"><canvas id="chartY"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartY, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">y(t) = y₀ + v₀·sin(θ)·t − ½g·t²</p>
         <p class="equation-explanation">Movimiento vertical con gravedad g = 9.81 m/s²</p>
@@ -153,6 +155,7 @@
         <span class="chart-badge badge-yellow" id="badgeV">— m/s</span>
       </div>
       <div class="grafica-content"><canvas id="chartV"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartV, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">Vx = v₀cos(θ) · Vy = v₀sin(θ) − g·t</p>
         <p class="equation-explanation">Vx constante · Vy decrece por gravedad</p>
@@ -468,6 +471,11 @@ function resetSim() {
   }
 }
 
+function resetChartZoom(chart, btn) {
+  chart.resetZoom();
+  btn.style.display = 'none';
+}
+
 // ═══════════════════════════════════════════════════════════
 //  GRÁFICAS
 // ═══════════════════════════════════════════════════════════
@@ -489,7 +497,15 @@ const baseOpts = (yLabel) => ({
   plugins:{
     legend:{ labels:{ color:'rgba(255,255,255,0.4)', font:{size:10,family:"'Space Mono',monospace"}, boxWidth:14, boxHeight:2, usePointStyle:true, pointStyle:'line' }, position:'top' },
     tooltip:{ backgroundColor:'rgba(5,7,15,0.96)', titleColor:'rgba(255,255,255,0.9)', bodyColor:'rgba(255,255,255,0.65)', borderColor:'rgba(0,229,255,0.2)', borderWidth:1, padding:{x:12,y:8}, cornerRadius:8, callbacks:{ title:i=>`t = ${i[0].label} s` } },
-    zoom:{ zoom:{ wheel:{enabled:true,speed:0.08}, pinch:{enabled:true}, mode:'xy' }, pan:{enabled:false} }
+    zoom:{ zoom:{ wheel:{enabled:true,speed:0.08}, pinch:{enabled:true}, mode:'xy',
+      onZoom({chart}) {
+        const wrapper = chart.canvas.closest('.grafica-wrapper, .chart-wrapper');
+        if (wrapper) {
+          const btn = wrapper.querySelector('.zoom-reset');
+          if (btn) btn.style.display = 'block';
+        }
+      }
+    }, pan:{enabled:false} }
   },
   scales:{
     x:{ title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}}, ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0}, grid:{color:'rgba(255,255,255,0.02)'}, border:{color:'rgba(255,255,255,0.04)'} },

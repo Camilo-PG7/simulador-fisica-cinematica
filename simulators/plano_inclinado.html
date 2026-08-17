@@ -119,6 +119,7 @@
         <span class="chart-badge badge-cyan" id="badgePos">— m</span>
       </div>
       <div class="grafica-content"><canvas id="chartPos"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartPos, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">x(t) = x₀ + v₀t + ½·a_neta·t²</p>
         <p class="equation-explanation">a_neta = g·sin(θ) − μ·g·cos(θ) (con fricción)</p>
@@ -131,6 +132,7 @@
         <span class="chart-badge badge-yellow" id="badgeVel">— m/s</span>
       </div>
       <div class="grafica-content"><canvas id="chartVel"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartVel, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">v(t) = v₀ + a_neta·t</p>
         <p class="equation-explanation">Movimiento uniformemente acelerado (o con fricción)</p>
@@ -143,6 +145,7 @@
         <span class="chart-badge badge-yellow" id="badgeFuerzas">— N</span>
       </div>
       <div class="grafica-content"><canvas id="chartFuerzas"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartFuerzas, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">F_neta = m·g·sin(θ) − f</p>
         <p class="equation-explanation">f = μ·m·g·cos(θ) · N = m·g·cos(θ)</p>
@@ -411,7 +414,7 @@ const bOpts=(yL)=>({
   plugins:{
     legend:{labels:{color:'rgba(255,255,255,0.4)',font:{size:10,family:"'Space Mono',monospace"},boxWidth:14,boxHeight:2,usePointStyle:true,pointStyle:'line'},position:'top'},
     tooltip:{backgroundColor:'rgba(5,7,15,0.96)',titleColor:'rgba(255,255,255,0.9)',bodyColor:'rgba(255,255,255,0.65)',borderColor:'rgba(0,229,255,0.2)',borderWidth:1,padding:{x:12,y:8},cornerRadius:8,callbacks:{title:i=>`t = ${i[0].label} s`}},
-    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:false}}
+    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy',onZoom({chart}){const w=chart.canvas.closest('.grafica-wrapper,.chart-wrapper');if(w){const b=w.querySelector('.zoom-reset');if(b)b.style.display='block';}}},pan:{enabled:false}}
   },
   scales:{
     x:{title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}},ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.02)'},border:{color:'rgba(255,255,255,0.04)'}},
@@ -551,6 +554,11 @@ function verificar(){
       posicion
     })
   });
+
+function resetChartZoom(chart, btn) {
+  chart.resetZoom();
+  btn.style.display = 'none';
+}
 </script>
 <script src="../assets/js/audio.js?v=6"></script>
 <script src="../assets/js/cursor.js"></script>

@@ -119,6 +119,7 @@
         <span class="chart-badge badge-cyan" id="badgeTheta">—°</span>
       </div>
       <div class="grafica-content"><canvas id="chartTheta"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartTheta, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">θ'' = −(g/L)·sin(θ)</p>
         <p class="equation-explanation">Integrado con RK4 · T = 2π√(L/g) (pequeños ángulos)</p>
@@ -131,6 +132,7 @@
         <span class="chart-badge badge-green" id="badgeE">— J</span>
       </div>
       <div class="grafica-content"><canvas id="chartE"></canvas></div>
+      <button class="zoom-reset" onclick="resetChartZoom(chartE, this)">↺ zoom</button>
       <div class="equation-box">
         <p class="equation">Ec = ½mL²ω² · Ep = mgL(1−cosθ)</p>
         <p class="equation-explanation">La energía total se conserva en péndulo ideal</p>
@@ -383,7 +385,7 @@ const bOpts=(yL)=>({
   plugins:{
     legend:{labels:{color:'rgba(255,255,255,0.4)',font:{size:10,family:"'Space Mono',monospace"},boxWidth:14,boxHeight:2,usePointStyle:true,pointStyle:'line'},position:'top'},
     tooltip:{backgroundColor:'rgba(5,7,15,0.96)',titleColor:'rgba(255,255,255,0.9)',bodyColor:'rgba(255,255,255,0.65)',borderColor:'rgba(0,229,255,0.2)',borderWidth:1,padding:{x:12,y:8},cornerRadius:8,callbacks:{title:i=>`t = ${i[0].label} s`}},
-    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy'},pan:{enabled:false}}
+    zoom:{zoom:{wheel:{enabled:true,speed:0.08},pinch:{enabled:true},mode:'xy',onZoom({chart}){const w=chart.canvas.closest('.grafica-wrapper,.chart-wrapper');if(w){const b=w.querySelector('.zoom-reset');if(b)b.style.display='block';}}},pan:{enabled:false}}
   },
   scales:{
     x:{title:{display:true,text:'Tiempo (s)',color:'rgba(255,255,255,0.25)',font:{size:9}},ticks:{color:'rgba(255,255,255,0.25)',font:{size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(255,255,255,0.02)'},border:{color:'rgba(255,255,255,0.04)'}},
@@ -501,6 +503,11 @@ function verificar(){
       periodo: perTeoricoVal
     })
   });
+
+function resetChartZoom(chart, btn) {
+  chart.resetZoom();
+  btn.style.display = 'none';
+}
 </script>
 <script src="../assets/js/audio.js?v=6"></script>
 <script src="../assets/js/cursor.js"></script>

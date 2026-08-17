@@ -743,11 +743,12 @@
       wheel: { enabled:true, speed:0.08 },
       pinch: { enabled:true },
       mode: 'xy',
-      onZoom() {
-        ['zrPos','zrVel','zrForces'].forEach(id => {
-          const el=document.getElementById(id);
-          if (el) el.style.display='block';
-        });
+      onZoom({chart}) {
+        const wrapper = chart.canvas.closest('.grafica-wrapper, .chart-wrapper');
+        if (wrapper) {
+          const btn = wrapper.querySelector('.zoom-reset');
+          if (btn) btn.style.display = 'block';
+        }
       }
     },
     pan: { enabled: false }
