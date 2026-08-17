@@ -290,8 +290,9 @@ function dibujarEscena(){
   const s2=Math.min(38+m2*1.8,65);
   drawMasa(cxR-s2/2,y2,s2,m2,'rgb(255,159,67)','m₂',acel<0);
 
-  drawVec(cxL,y1,0,-(tension*1.4),'rgb(255,209,102)','T',true);
-  drawVec(cxR,y2,0,-(tension*1.4),'rgb(255,209,102)','T',true);
+  const tVecLen = Math.min(tension * 0.6, 55);
+  drawVec(cxL,y1,0,-tVecLen,'rgb(255,209,102)','T',true);
+  drawVec(cxR,y2,0,-tVecLen,'rgb(255,209,102)','T',true);
 
   if(Math.abs(vel)>0.02){
     fill(0,229,255,200); noStroke(); textSize(11); textFont('monospace'); textAlign(CENTER);

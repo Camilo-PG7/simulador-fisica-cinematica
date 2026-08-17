@@ -483,7 +483,8 @@ button.sim-btn:active { transform: scale(0.96); }
 }
 
 .zoom-reset {
-  position: absolute; top: 12px; right: 12px;
+  display: none;
+  margin: 8px auto 0;
   background: rgba(13, 17, 32, 0.92);
   border: 1px solid var(--theme-accent);
   border-radius: 6px;
@@ -491,9 +492,8 @@ button.sim-btn:active { transform: scale(0.96); }
   font-family: 'Space Mono', monospace;
   font-size: 10px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 5px 16px;
   cursor: pointer;
-  display: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   transition: 0.2s;
   z-index: 20;
