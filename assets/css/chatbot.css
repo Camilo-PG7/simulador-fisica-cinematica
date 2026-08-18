@@ -744,3 +744,95 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES FOR CHATBOT
+   ═══════════════════════════════════════════════════════════ */
+[data-theme="light"] .chatbot-panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(0, 131, 143, 0.2);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15), 0 0 30px rgba(0, 131, 143, 0.08);
+}
+
+[data-theme="light"] .chatbot-header {
+  background: linear-gradient(180deg, rgba(0, 131, 143, 0.08) 0%, transparent 100%);
+  border-bottom: 1px solid rgba(0, 131, 143, 0.12);
+}
+
+[data-theme="light"] .chatbot-header-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .chatbot-header-subtitle {
+  color: #64748b;
+}
+
+[data-theme="light"] .chatbot-provider-selector {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .chatbot-provider-tab {
+  color: #64748b;
+}
+
+[data-theme="light"] .chatbot-provider-tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+[data-theme="light"] .chatbot-provider-tab.active {
+  background: #ffffff;
+  color: #00838f;
+  border-color: rgba(0, 131, 143, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .chatbot-btn-close {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #64748b;
+}
+
+[data-theme="light"] .chatbot-msg {
+  color: #0f172a;
+}
+
+[data-theme="light"] .chatbot-msg.bot {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .chatbot-msg.user {
+  background: linear-gradient(135deg, rgba(0, 131, 143, 0.12), rgba(0, 131, 143, 0.06));
+  border: 1px solid rgba(0, 131, 143, 0.22);
+}
+
+[data-theme="light"] .chatbot-chip {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+[data-theme="light"] .chatbot-chip:hover {
+  background: rgba(0, 131, 143, 0.08);
+  border-color: #00838f;
+  color: #00838f;
+}
+
+[data-theme="light"] .chatbot-input-container {
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .chatbot-input {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .chatbot-input:focus {
+  border-color: #00838f;
+  background: #ffffff;
+}
+
+

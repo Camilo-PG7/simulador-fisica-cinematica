@@ -8,8 +8,17 @@
 <title>Simulador de Física — Cinemática Interactiva</title>
 <meta name="description" content="Laboratorio virtual de física: simuladores interactivos de cinemática con p5.js y Chart.js para estudiantes universitarios.">
 
+<script>
+  (function() {
+    const saved = localStorage.getItem('fisica_sim_theme');
+    const theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="assets/js/theme.js"></script>
 
 <style>
 :root{
@@ -28,11 +37,27 @@
   --theme-glow: var(--glow1);
 }
 
+[data-theme="light"] {
+  --bg:#f1f5f9; --surface:#ffffff; --border:rgba(0,0,0,0.09);
+  --accent1:#00838f; --accent2:#d81b60; --accent3:#2e7d32; --accent4:#b45309;
+  --accent5:#6d28d9; --accent6:#c2410c;
+  --text:#0f172a; --muted:#64748b; --card:rgba(0,0,0,0.03);
+  --glow1:0 4px 20px rgba(0,131,143,0.2); --glow2:0 4px 20px rgba(216,27,96,0.2);
+  --glow3:0 4px 20px rgba(46,125,50,0.2); --glow4:0 4px 20px rgba(180,83,9,0.2);
+  --glow5:0 4px 20px rgba(109,40,217,0.2); --glow6:0 4px 20px rgba(194,65,12,0.2);
+
+  --theme-accent: var(--accent1);
+  --theme-accent-alpha: rgba(0, 131, 143, 0.08);
+  --theme-accent-alpha-hover: rgba(0, 131, 143, 0.15);
+  --theme-glow: var(--glow1);
+}
+
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
   background:var(--bg); color:var(--text);
   font-family:'Syne',sans-serif; overflow-x:hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 body::before{
@@ -42,6 +67,11 @@ body::before{
     linear-gradient(90deg,rgba(0,229,255,0.03) 1px, transparent 1px);
   background-size:40px 40px; pointer-events:none; z-index:0;
   animation: scroll-grid 20s linear infinite;
+}
+[data-theme="light"] body::before{
+  background-image:
+    linear-gradient(rgba(0,114,150,0.05) 1px, transparent 1px),
+    linear-gradient(90deg,rgba(0,114,150,0.05) 1px, transparent 1px);
 }
 
 @keyframes scroll-grid {
@@ -393,12 +423,41 @@ body::before{
 }
 
 
+.btn-theme, .btn-mute {
+  position: absolute;
+  top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition: 0.2s;
+  z-index: 100;
+}
+.btn-mute { right: 20px; }
+.btn-theme { right: 130px; }
+.btn-theme:hover, .btn-mute:hover {
+  background: var(--theme-accent-alpha-hover);
+  border-color: var(--theme-accent);
+  color: var(--text);
+  box-shadow: var(--theme-glow);
+}
+
+@media(max-width: 768px) {
+  .btn-mute { top: 12px !important; right: 12px !important; font-size: 0.65rem !important; padding: 5px 8px !important; }
+  .btn-theme { top: 12px !important; right: 90px !important; font-size: 0.65rem !important; padding: 5px 8px !important; }
+}
 </style>
 </head>
 <body>
 
-<!-- MUTE BUTTON -->
-<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 20px; right: 20px; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
+<!-- TOP CONTROLS -->
+<button class="btn-theme" onclick="ThemeManager.toggle()" id="btnTheme">☀️ Modo Claro</button>
+<button class="btn-mute" onclick="SFX.toggleMute()">🔊 Sonido</button>
 
 <!-- WELCOME -->
 <section id="screen-welcome" class="screen active">

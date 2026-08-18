@@ -5,8 +5,15 @@
   <link rel="icon" type="image/png" href="../favicon.png">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulación MRU + MCU</title>
+<script>
+  (function() {
+    const saved = localStorage.getItem('fisica_sim_theme');
+    const theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
   <link rel="stylesheet" href="../assets/css/chatbot.css">
+  <script src="../assets/js/theme.js"></script>
   <script src="../assets/js/env.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -26,6 +33,25 @@
       --theme-accent-alpha-hover: rgba(0, 229, 255, 0.15);
       --theme-glow: 0 0 30px rgba(0,229,255,0.25);
     }
+
+    [data-theme="light"] {
+      --bg:#f1f5f9;--border:rgba(0,0,0,0.09);
+      --accent1:#00838f;--accent2:#d81b60;--accent3:#2e7d32;--accent4:#b45309;
+      --text:#0f172a;--muted:#64748b;
+      --theme-accent: var(--accent1);
+      --theme-accent-alpha: rgba(0, 131, 143, 0.08);
+      --theme-accent-alpha-hover: rgba(0, 131, 143, 0.15);
+      --theme-glow: 0 4px 20px rgba(0, 131, 143, 0.2);
+    }
+    [data-theme="light"] .formula-box { background: #ffffff; border-color: rgba(0,0,0,0.09); box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    [data-theme="light"] .formula-box h3 { color: #64748b; }
+    [data-theme="light"] .formula { color: #0f172a; }
+    [data-theme="light"] .simulacion { background: #f8fafc; border-color: rgba(0,0,0,0.09); }
+    [data-theme="light"] .controls { background: #ffffff; border-color: rgba(0,0,0,0.09); box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    [data-theme="light"] .chart-wrapper { background: #ffffff; border-color: rgba(0,0,0,0.09); box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    [data-theme="light"] .chart-title { color: #64748b; }
+    [data-theme="light"] h1 { color: #0f172a; }
+    [data-theme="light"] #btnVolver, [data-theme="light"] .btn-theme, [data-theme="light"] .btn-mute { background: #ffffff; border-color: rgba(0,0,0,0.12); color: #0f172a; }
     
     body.theme-cyan {
       --theme-accent: var(--accent1);
@@ -41,6 +67,7 @@
       color: var(--text);
       min-height: 100vh;
       overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
     body::before{
       content:'';position:fixed;inset:0;
@@ -296,7 +323,8 @@
 <body class="theme-cyan">
 
 <a href="../index.html#menu" id="btnVolver">← Volver</a>
-<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
+<button class="btn-theme" onclick="ThemeManager.toggle()" id="btnTheme" style="position: absolute; top: 15px; right: 130px; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">☀️ Modo Claro</button>
+<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
 
 <div class="main-container">
   <h1>Simulación MRU + MCU</h1>

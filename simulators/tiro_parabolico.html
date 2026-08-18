@@ -7,8 +7,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tiro Parabólico — Simulador de Física</title>
 <meta name="description" content="Simulador de tiro parabólico: velocidad inicial, ángulo, trayectoria animada, alcance, altura máxima, gráficas x(t) y y(t).">
+<script>
+  (function() {
+    const saved = localStorage.getItem('fisica_sim_theme');
+    const theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
 <link rel="stylesheet" href="../assets/css/sim-shared.css">
 <link rel="stylesheet" href="../assets/css/chatbot.css">
+<script src="../assets/js/theme.js"></script>
 <script src="../assets/js/env.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -48,7 +56,8 @@
 <body class="theme-purple">
 
 <a href="../index.html#menu" id="btnVolver">← Volver</a>
-<button class="btn-mute" onclick="SFX.toggleMute()" style="position: absolute; top: 15px; right: 15px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.7rem; transition: 0.2s; z-index: 100;">🔊 Sonido</button>
+<button class="btn-theme" onclick="ThemeManager.toggle()" id="btnTheme">☀️ Modo Claro</button>
+<button class="btn-mute" onclick="SFX.toggleMute()">🔊 Sonido</button>
 
 <div class="main-container">
   <div class="simulation-area">
@@ -270,7 +279,9 @@ function windowResized() {
 }
 
 function draw() {
-  background(5, 7, 15);
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) background(248, 250, 252);
+  else background(5, 7, 15);
   calcEscala();
   dibujarFondo();
   dibujarEjes();
@@ -300,7 +311,8 @@ function calcEscala() {
 }
 
 function dibujarFondo() {
-  stroke(255,255,255,6); strokeWeight(1);
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  stroke(isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'); strokeWeight(1);
   const paso = Math.round(10 / escalaM2px) * 10 || 10;
   for (let mx = 0; mx <= alcance*1.2; mx += paso) {
     const sx = originX + mx * escalaM2px;
@@ -315,13 +327,14 @@ function dibujarFondo() {
 }
 
 function dibujarEjes() {
-  stroke(255,255,255,60); strokeWeight(2);
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  stroke(isLight ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.25)'); strokeWeight(2);
   line(originX, 20, originX, originY+2);
   line(originX-2, originY, width-20, originY);
-  stroke(163,255,107,80); strokeWeight(2);
+  stroke(isLight ? 'rgba(46,125,50,0.6)' : 'rgba(163,255,107,0.3)'); strokeWeight(2);
   line(originX, originY - y0ini*escalaM2px, width-20, originY - y0ini*escalaM2px);
 
-  noStroke(); fill(255,255,255,120); textSize(10); textFont('monospace');
+  noStroke(); fill(isLight ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.5)'); textSize(10); textFont('monospace');
   textAlign(CENTER); text('x (m)', (originX + width - 20) / 2, originY + 22);
   textAlign(LEFT); push(); translate(Math.max(12, originX - 24), height/2); rotate(-HALF_PI); text('y (m)', 0, 0); pop();
   textAlign(LEFT);

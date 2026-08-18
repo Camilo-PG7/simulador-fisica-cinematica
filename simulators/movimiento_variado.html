@@ -15,7 +15,15 @@ window.MathJax = {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+  (function() {
+    const saved = localStorage.getItem('fisica_sim_theme');
+    const theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
 <link rel="stylesheet" href="../assets/css/chatbot.css">
+<script src="../assets/js/theme.js"></script>
 <script src="../assets/js/env.js"></script>
 <style>
 :root{
@@ -37,6 +45,22 @@ window.MathJax = {
   --theme-glow: 0 0 30px rgba(251,191,36,0.25);
 }
 
+[data-theme="light"] {
+  --bg:#f1f5f9;--s0:#ffffff;--s1:#f8fafc;--s2:#e2e8f0;--s3:#f1f5f9;
+  --bdr:rgba(0,0,0,0.09);--bdr2:rgba(0,0,0,0.16);
+  --ac:#b45309;--adm:rgba(180,83,9,0.1);--agl:rgba(180,83,9,0.2);
+  --gr:#16a34a;--gdm:rgba(22,163,74,0.1);
+  --bl:#2563eb;--bdm:rgba(37,99,235,0.1);
+  --pu:#7c3aed;--pdm:rgba(124,58,237,0.1);
+  --rd:#dc2626;--rdm:rgba(220,38,38,0.1);
+  --tx:#0f172a;--mu:#64748b;--fn:#94a3b8;
+  --theme-accent: var(--ac);
+  --theme-accent-alpha: var(--adm);
+  --theme-accent-alpha-hover: var(--agl);
+  --theme-glow: 0 4px 20px rgba(180,83,9,0.2);
+}
+[data-theme="light"] h1 { color: #0f172a; }
+
 body.theme-yellow {
   --theme-accent: var(--ac);
   --theme-accent-alpha: var(--adm);
@@ -44,7 +68,7 @@ body.theme-yellow {
   --theme-glow: 0 0 30px rgba(251,191,36,0.25);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh;padding:32px 18px 100px;overflow-x:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100vh;padding:32px 18px 100px;overflow-x:hidden;transition:background-color .25s ease,color .25s ease}
 body::before {
   content: '';
   position: fixed;
@@ -256,6 +280,8 @@ h1 em{color:var(--ac);font-style:normal}
 </style>
 </head>
 <body class="theme-yellow">
+
+<button class="btn-theme" onclick="ThemeManager.toggle()" id="btnTheme" style="position: fixed; top: 18px; right: 18px; z-index: 300; background: var(--s0); border: 1px solid var(--bdr2); color: var(--tx); font-family: var(--mono); font-size: 0.72rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">☀️ Modo Claro</button>
 
 <!-- Loader -->
 <div id="ldr">
