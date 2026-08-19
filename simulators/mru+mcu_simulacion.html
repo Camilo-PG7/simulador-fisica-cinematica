@@ -800,66 +800,74 @@
       pan: { enabled: false }
     };
 
-    const cfg = (label, color, yLabel) => ({
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label, data: [],
-          borderColor: color,
-          backgroundColor: makeGrad(color),
-          fill: true, tension: 0.42,
-          pointRadius: 0, pointHoverRadius: 0,
-          borderWidth: 2.5, borderJoinStyle: 'round', borderCapStyle: 'round'
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, animation: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: {
-            labels: {
-              color: 'rgba(255,255,255,0.45)',
-              font: { size: 10, family: "'Segoe UI',Arial", weight: '500' },
-              boxWidth: 14, boxHeight: 2, padding: 12,
-              usePointStyle: true, pointStyle: 'line'
-            },
-            position: 'top'
-          },
-          tooltip: {
-            enabled: true,
-            backgroundColor: 'rgba(4,9,22,0.96)',
-            titleColor: 'rgba(255,255,255,0.95)',
-            bodyColor: color,
-            borderColor: color.replace('rgb(','rgba(').replace(')',',0.4)'),
-            borderWidth: 1, padding: { x:12, y:8 }, cornerRadius: 8,
-            displayColors: false,
-            titleFont: { size: 11, weight: '700', family: "'Segoe UI',Arial" },
-            bodyFont:  { size: 12, weight: '700', family: "'Segoe UI',Arial" },
-            callbacks: {
-              title: (i) => `t = ${i[0].label} s`,
-              label: (i) => `${i.dataset.label}: ${parseFloat(i.raw).toFixed(3)}`
-            }
-          },
-          zoom: zoomPlugin,
-          lineaTransicion: {}
+    const cfg = (label, color, yLabel) => {
+      const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+      const tc = isLt ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.28)';
+      const gc = isLt ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.025)';
+      const ttBg = isLt ? 'rgba(255,255,255,0.96)' : 'rgba(4,9,22,0.96)';
+      const ttTx = isLt ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)';
+      
+      return {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label, data: [],
+            borderColor: color,
+            backgroundColor: makeGrad(color),
+            fill: true, tension: 0.42,
+            pointRadius: 0, pointHoverRadius: 0,
+            borderWidth: 2.5, borderJoinStyle: 'round', borderCapStyle: 'round'
+          }]
         },
-        scales: {
-          x: {
-            title: { display:true, text:'Tiempo (s)', color:'rgba(255,255,255,0.28)', font:{size:9} },
-            ticks: { color:'rgba(255,255,255,0.28)', font:{size:9}, maxTicksLimit:8, maxRotation:0 },
-            grid: { color:'rgba(255,255,255,0.025)' },
-            border: { color:'rgba(255,255,255,0.05)' }
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: {
+                color: isLt ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.45)',
+                font: { size: 10, family: "'Segoe UI',Arial", weight: '500' },
+                boxWidth: 14, boxHeight: 2, padding: 12,
+                usePointStyle: true, pointStyle: 'line'
+              },
+              position: 'top'
+            },
+            tooltip: {
+              enabled: true,
+              backgroundColor: ttBg,
+              titleColor: ttTx,
+              bodyColor: color,
+              borderColor: color.replace('rgb(','rgba(').replace(')',',0.4)'),
+              borderWidth: 1, padding: { x:12, y:8 }, cornerRadius: 8,
+              displayColors: false,
+              titleFont: { size: 11, weight: '700', family: "'Segoe UI',Arial" },
+              bodyFont:  { size: 12, weight: '700', family: "'Segoe UI',Arial" },
+              callbacks: {
+                title: (i) => `t = ${i[0].label} s`,
+                label: (i) => `${i.dataset.label}: ${parseFloat(i.raw).toFixed(3)}`
+              }
+            },
+            zoom: zoomPlugin,
+            lineaTransicion: {}
           },
-          y: {
-            title: { display:true, text:yLabel, color:'rgba(255,255,255,0.28)', font:{size:9} },
-            ticks: { color:'rgba(255,255,255,0.28)', font:{size:9}, maxTicksLimit:5 },
-            grid: { color:'rgba(255,255,255,0.025)' },
-            border: { color:'rgba(255,255,255,0.05)' }
+          scales: {
+            x: {
+              title: { display:true, text:'Tiempo (s)', color:tc, font:{size:9} },
+              ticks: { color:tc, font:{size:9}, maxTicksLimit:8, maxRotation:0 },
+              grid: { color:gc },
+              border: { color:gc }
+            },
+            y: {
+              title: { display:true, text:yLabel, color:tc, font:{size:9} },
+              ticks: { color:tc, font:{size:9}, maxTicksLimit:5 },
+              grid: { color:gc },
+              border: { color:gc }
+            }
           }
         }
-      }
-    });
+      };
+    };
 
     chartPos = new Chart(document.getElementById('chartPos').getContext('2d'),
       cfg('Posición (m)',     'rgb(79,172,254)',  'Posición (m)'));
@@ -884,6 +892,31 @@
           c._hoverX = null;
           c.render();
         });
+      });
+    });
+
+    // ── Update colors on theme change ───────────────────────────────────────
+    window.addEventListener('themechange', (e) => {
+      const isLt = e.detail.theme === 'light';
+      const tc = isLt ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.28)';
+      const gc = isLt ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.025)';
+      const ttBg = isLt ? 'rgba(255,255,255,0.96)' : 'rgba(4,9,22,0.96)';
+      const ttTx = isLt ? 'rgba(15,23,42,0.95)' : 'rgba(255,255,255,0.95)';
+      
+      [chartPos, chartVel, chartAcc].forEach(c => {
+        if (!c) return;
+        c.options.scales.x.title.color = tc;
+        c.options.scales.x.ticks.color = tc;
+        c.options.scales.x.grid.color = gc;
+        c.options.scales.x.border.color = gc;
+        c.options.scales.y.title.color = tc;
+        c.options.scales.y.ticks.color = tc;
+        c.options.scales.y.grid.color = gc;
+        c.options.scales.y.border.color = gc;
+        c.options.plugins.legend.labels.color = isLt ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.45)';
+        c.options.plugins.tooltip.backgroundColor = ttBg;
+        c.options.plugins.tooltip.titleColor = ttTx;
+        c.update();
       });
     });
   }
