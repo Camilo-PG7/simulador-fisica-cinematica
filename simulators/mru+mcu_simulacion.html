@@ -23,9 +23,13 @@
     * { box-sizing: border-box; }
 
     :root{
-      --bg:#05070f;--border:rgba(255,255,255,0.08);
+      --bg:#05070f;--border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.16);
       --accent1:#00e5ff;--accent2:#ff3c6e;--accent3:#a3ff6b;--accent4:#ffd166;
       --text:#e8ecf8;--muted:#7a85a0;
+      --surface-alpha: rgba(8,16,36,0.82);
+      --sim-canvas-bg: rgba(8,16,36,0.6);
+      --shadow-main: 0 8px 24px rgba(0,0,0,0.5);
+      --card: rgba(255,255,255,0.04);
       
       /* Default active theme variables */
       --theme-accent: var(--accent1);
@@ -35,9 +39,13 @@
     }
 
     [data-theme="light"] {
-      --bg:#f1f5f9;--border:rgba(0,0,0,0.09);
+      --bg:#f1f5f9;--border:rgba(0,0,0,0.09);--border-strong:rgba(0,0,0,0.18);
       --accent1:#00838f;--accent2:#d81b60;--accent3:#2e7d32;--accent4:#b45309;
       --text:#0f172a;--muted:#64748b;
+      --surface-alpha: rgba(255,255,255,0.96);
+      --sim-canvas-bg: #f8fafc;
+      --shadow-main: 0 8px 24px rgba(15,23,42,0.08);
+      --card: rgba(0,0,0,0.03);
       --theme-accent: var(--accent1);
       --theme-accent-alpha: rgba(0, 131, 143, 0.08);
       --theme-accent-alpha-hover: rgba(0, 131, 143, 0.15);
@@ -87,15 +95,15 @@
       z-index: 200;
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px;
-      background: rgba(8,16,36,0.82);
+      background: var(--surface-alpha);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
       font-family: 'Space Mono', monospace;
       font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
       text-decoration: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: var(--shadow-main);
       transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
     #btnVolver:hover {
@@ -112,43 +120,43 @@
     h1 {
       text-align: center; font-size: clamp(1.2em,3vw,1.8em);
       font-weight: 700; letter-spacing: 0.04em; margin: 0 0 20px;
-      color: rgba(255,255,255,0.9);
+      color: var(--text);
     }
 
     /* ── Formula box ──────────────────────────────────────────────────── */
     .formula-box {
-      background: rgba(8,16,36,0.7); border: 1px solid rgba(255,255,255,0.08);
+      background: var(--surface-alpha); border: 1px solid var(--border);
       border-radius: 12px; padding: 16px 24px; margin: 0 auto 20px;
-      max-width: 620px; text-align: center;
+      max-width: 620px; text-align: center; box-shadow: var(--shadow-main);
     }
     .formula-box h3 {
       margin: 0 0 10px; font-size: 0.85em; letter-spacing: 0.08em;
-      text-transform: uppercase; color: rgba(255,255,255,0.45);
+      text-transform: uppercase; color: var(--muted);
     }
     .formula {
       font-family: "Times New Roman",Times,serif;
-      font-size: clamp(1em,2.2vw,1.2em); color: rgba(255,255,255,0.9); margin: 6px 0;
+      font-size: clamp(1em,2.2vw,1.2em); color: var(--text); margin: 6px 0;
     }
-    .formula-box p { font-size: 0.78em; color: rgba(255,255,255,0.4); margin: 8px 0 0; }
+    .formula-box p { font-size: 0.78em; color: var(--muted); margin: 8px 0 0; }
 
     /* ── Canvas ───────────────────────────────────────────────────────── */
     .simulacion {
-      background: rgba(8,16,36,0.6); border: 1px solid rgba(255,255,255,0.08);
+      background: var(--sim-canvas-bg, rgba(8,16,36,0.6)); border: 1px solid var(--border);
       border-radius: 14px; margin: 0 auto 24px; overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4); width: 100%;
+      box-shadow: var(--shadow-main); width: 100%;
     }
     .simulacion canvas { display: block; width: 100% !important; height: auto !important; }
 
     /* ── Controls ─────────────────────────────────────────────────────── */
     .controls {
-      background: rgba(8,16,36,0.82); backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+      background: var(--surface-alpha); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 10px;
       padding: 16px 20px; max-width: 500px; margin: 0 auto 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: var(--shadow-main);
     }
     .param-group { margin-bottom: 10px; }
     .param-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .param-label { font-family: 'Space Mono', monospace; font-size: 0.8em; color: rgba(255,255,255,0.7); }
+    .param-label { font-family: 'Space Mono', monospace; font-size: 0.8em; color: var(--muted); }
     .param-value {
       font-family: 'Space Mono', monospace; font-size: 0.82em; font-weight: 700; color: var(--theme-accent);
       background: var(--theme-accent-alpha); padding: 1px 8px;
@@ -204,6 +212,19 @@
     .step-box.visible { display: block; }
     .step-eq { font-family: 'Space Mono', monospace; font-size: 0.62rem; color: var(--theme-accent); line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
 
+    /* ── Charts toggle button ────────────────────────────────────── */
+    .btn-charts-toggle {
+      display: block; width: 100%; margin-top: 10px;
+      padding: 9px 4px; border: 1px dashed var(--border-strong);
+      border-radius: 7px; background: transparent;
+      color: var(--muted); font-family: 'Space Mono', monospace;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.05em; text-align: center;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-charts-toggle:hover { background: var(--theme-accent-alpha); color: var(--theme-accent); border-color: var(--theme-accent); }
+    .btn-charts-toggle.active { background: var(--theme-accent-alpha); color: var(--theme-accent); border-color: var(--theme-accent); border-style: solid; }
+
     /* ── Charts ───────────────────────────────────────────────────────── */
     .chart-container {
       display: grid;
@@ -212,16 +233,16 @@
     }
 
     .chart-wrapper {
-      background: rgba(6,12,28,0.88);
-      border: 1px solid rgba(255,255,255,0.07);
+      background: var(--surface-alpha);
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 14px 14px 10px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: var(--shadow-main);
       position: relative;
-      transition: box-shadow 0.2s;
+      transition: box-shadow 0.2s, background-color 0.25s, border-color 0.25s;
     }
     .chart-wrapper:hover {
-      box-shadow: 0 10px 36px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
+      box-shadow: 0 10px 36px rgba(0,0,0,0.2);
     }
     .chart-wrapper.glow-blue  { border-top: 2px solid rgba(79,172,254,0.5); }
     .chart-wrapper.glow-green { border-top: 2px solid rgba(67,233,190,0.5); }
@@ -233,7 +254,7 @@
     }
     .chart-title {
       font-size: 0.76em; font-weight: 700; letter-spacing: 0.08em;
-      text-transform: uppercase; color: rgba(255,255,255,0.48);
+      text-transform: uppercase; color: var(--muted);
     }
     .chart-badge {
       font-size: 0.8em; font-weight: 700; font-variant-numeric: tabular-nums;
@@ -248,8 +269,8 @@
     .chart-inner canvas { touch-action: pan-y !important; }
 
     .chart-hint {
-      text-align: center; font-size: 0.65em; color: rgba(255,255,255,0.18);
-      margin-top: 6px; letter-spacing: 0.03em; user-select: none;
+      text-align: center; font-size: 0.65em; color: var(--muted);
+      margin-top: 6px; letter-spacing: 0.03em; user-select: none; opacity: 0.7;
     }
 
     .zoom-reset {
@@ -341,7 +362,7 @@
   </div>
 
   <div class="controls">
-    <h3>⚙ Parámetros</h3>
+    <h3 style="font-family:'Space Mono',monospace;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--theme-accent);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px;">⚙ Parámetros</h3>
     <div class="param-group">
       <div class="param-header">
         <span class="param-label">Velocidad (m/s)</span>
@@ -359,9 +380,10 @@
       <button id="btnShare_MRU" onclick="shareURL_MRU()">🔗 Link</button>
     </div>
     <div class="step-box" id="stepBox"><div class="step-eq" id="stepEq">—</div></div>
+    <button class="btn-charts-toggle" id="btnCharts" onclick="toggleCharts()">📈 Ver Gráficas</button>
   </div>
 
-  <div class="chart-container">
+  <div class="chart-container" id="chartSection" style="display:none;">
 
     <div class="chart-wrapper glow-blue">
       <div class="chart-header">
@@ -397,6 +419,22 @@
 </div>
 
 <script>
+  // ── Toggle Gráficas ──────────────────────────────────────────────────────
+  function toggleCharts() {
+    const sec = document.getElementById('chartSection');
+    const btn = document.getElementById('btnCharts');
+    const isVisible = sec.style.display !== 'none';
+    sec.style.display = isVisible ? 'none' : 'grid';
+    btn.textContent = isVisible ? '📈 Ver Gráficas' : '📉 Ocultar Gráficas';
+    btn.classList.toggle('active', !isVisible);
+    // Forzar resize de Chart.js cuando se hace visible
+    if (!isVisible) {
+      setTimeout(() => {
+        [chartPos, chartVel, chartAcc].forEach(c => { if(c) c.resize(); });
+      }, 50);
+    }
+  }
+
   // ── Plugin: línea vertical de transición MRU→MCU ────────────────────────
   const pluginCrosshair = {
     id: 'crosshair',
@@ -408,7 +446,8 @@
 
       ctx.save();
       ctx.setLineDash([3, 3]);
-      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+      ctx.strokeStyle = isLt ? 'rgba(15,23,42,0.22)' : 'rgba(255,255,255,0.22)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x, chartArea.top);
@@ -717,7 +756,8 @@
 
   // ── HUD ───────────────────────────────────────────────────────────────────
   function dibujarHUD() {
-    noStroke(); fill(255,255,255,200);
+    const isLtH = document.documentElement.getAttribute('data-theme') === 'light';
+    noStroke(); fill(isLtH ? 'rgba(15,23,42,0.75)' : 'rgba(255,255,255,0.8)');
     textFont('monospace'); textSize(11); textAlign(LEFT);
     text(`t: ${tiempoFisico.toFixed(1)} s`, 12, 20);
     text(`v: ${velocidad.toFixed(1)} m/s`, 12, 36);

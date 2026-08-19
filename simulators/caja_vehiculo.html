@@ -490,7 +490,8 @@ function dibujarEscena(){
     drawVec(truckX+truckW*0.3,truckY-10, Math.sign(aTruck)*60,0,'#ff9f43','a_t');
   }
 
-  fill(255,255,255,100); noStroke(); textSize(9); textFont('monospace'); textAlign(CENTER);
+  const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+  fill(isLt ? 'rgba(15,23,42,0.6)' : 'rgba(255,255,255,0.4)'); noStroke(); textSize(9); textFont('monospace'); textAlign(CENTER);
   text(`Camión Δx = ${posCamion.toFixed(1)} m`,truckX+truckW/2,groundY+25);
   text(`Caja Δx = ${posCaja.toFixed(1)} m`,   boxX+boxW/2,boxY-8);
 }
@@ -504,7 +505,7 @@ function drawVec(x,y,dx,dy,col,label){
   drawingContext.shadowBlur=0;
   push(); translate(x+dx,y+dy); rotate(ang); noStroke();
   beginShape(); vertex(0,0); vertex(-hl,-hl/2); vertex(-hl,hl/2); endShape(CLOSE);
-  translate(6,0); rotate(-ang); fill(255); noStroke(); textSize(9); text(label,0,4); pop();
+  translate(6,0); rotate(-ang); const isLtV=document.documentElement.getAttribute('data-theme')==='light'; fill(isLtV?30:255); noStroke(); textSize(9); text(label,0,4); pop();
 }
 
 // ═══════════════════════════════════════════════════════════

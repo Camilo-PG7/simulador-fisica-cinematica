@@ -386,7 +386,7 @@
     beginShape();
     vertex(0,0); vertex(-headLength,-headLength/2); vertex(-headLength,headLength/2);
     endShape(CLOSE);
-    translate(4,0); rotate(-angle); noStroke(); fill(255); textSize(10);
+    translate(4,0); rotate(-angle); noStroke(); const isLtA=document.documentElement.getAttribute('data-theme')==='light'; fill(isLtA?30:255); textSize(10);
     text(label,0,0);
     pop();
   }

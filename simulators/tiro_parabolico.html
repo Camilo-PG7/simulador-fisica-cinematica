@@ -394,7 +394,7 @@ function drawArrow(x1, y1, x2, y2, col, label) {
   drawingContext.shadowBlur = 0;
   push(); translate(x2,y2); rotate(angle); noStroke();
   beginShape(); vertex(0,0); vertex(-hl,-hl/2); vertex(-hl,hl/2); endShape(CLOSE);
-  translate(5,0); rotate(-angle); fill(255); noStroke(); textSize(9);
+  translate(5,0); rotate(-angle); const isLtT=document.documentElement.getAttribute('data-theme')==='light'; fill(isLtT?30:255); noStroke(); textSize(9);
   text(label,0,4);
   pop();
 }

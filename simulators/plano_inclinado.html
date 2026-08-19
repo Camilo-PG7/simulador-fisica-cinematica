@@ -367,7 +367,8 @@ function dibujarEscena(){
   fill(255,255,255,30); noStroke();
   rect(4, -cajaS+4, cajaS-8, 6, 2);
 
-  fill(255); noStroke(); textSize(12); textAlign(CENTER,CENTER); textFont('monospace');
+  const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+  fill(isLt ? 30 : 255); noStroke(); textSize(12); textAlign(CENTER,CENTER); textFont('monospace');
   text(masa.toFixed(0)+'kg', cajaS/2, -cajaS/2);
 
   // 6. Dibujar los vectores de fuerza
@@ -402,7 +403,7 @@ function drawVec(x,y,dx,dy,col,label){
   drawingContext.shadowBlur=0;
   push(); translate(x+dx,y+dy); rotate(ang); noStroke();
   beginShape(); vertex(0,0); vertex(-hl,-hl/2); vertex(-hl,hl/2); endShape(CLOSE);
-  translate(5,0); rotate(-ang); noStroke(); fill(255); textSize(9);
+  translate(5,0); rotate(-ang); noStroke(); const isLtV=document.documentElement.getAttribute('data-theme')==='light'; fill(isLtV?30:255); textSize(9);
   text(label,0,4); pop();
 }
 

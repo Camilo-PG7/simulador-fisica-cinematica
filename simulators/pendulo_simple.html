@@ -359,7 +359,8 @@ function dibujarEscena(){
   const vDy=-Math.sin(theta)*Math.abs(omega)*L*40*(theta<0?-1:1);
   drawVec(bx,by,vDx,vDy,'#ffd166','v');
 
-  fill(255,255,255,120); noStroke(); textSize(10); textFont('monospace'); textAlign(CENTER);
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  fill(isLight ? 'rgba(15,23,42,0.7)' : 'rgba(255,255,255,0.5)'); noStroke(); textSize(10); textFont('monospace'); textAlign(CENTER);
   text(`L = ${L.toFixed(2)} m`, cx, cy+L*pxPerM/2+20);
 
   const tDeg=(theta*180/Math.PI);
@@ -375,7 +376,7 @@ function drawVec(x,y,dx,dy,col,label){
   drawingContext.shadowBlur=0;
   push(); translate(x+dx,y+dy); rotate(ang); noStroke();
   beginShape(); vertex(0,0); vertex(-hl,-hl/2); vertex(-hl,hl/2); endShape(CLOSE);
-  translate(5,0); rotate(-ang); fill(255); noStroke(); textSize(9); text(label,0,4); pop();
+  translate(5,0); rotate(-ang); const isLightVec = document.documentElement.getAttribute('data-theme') === 'light'; fill(isLightVec ? 30 : 255); noStroke(); textSize(9); text(label,0,4); pop();
 }
 
 // ═══════════════════════════════════════════════════════════

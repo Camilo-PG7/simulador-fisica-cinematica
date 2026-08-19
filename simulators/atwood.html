@@ -317,9 +317,9 @@ function drawMasa(x,y,s,masa,col,label,bajando){
   rect(x,y,s,s,6);
   noStroke(); fill(255,255,255,25);
   rect(x+4,y+4,s-8,8,3);
-  fill(255); noStroke(); textSize(12); textAlign(CENTER,CENTER); textFont('monospace');
+  const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+  fill(isLt ? 30 : 255); noStroke(); textSize(12); textAlign(CENTER,CENTER); textFont('monospace');
   text(masa.toFixed(1)+'kg',x+s/2,y+s/2);
-  const py=bajando?s+18:s-18;
   drawVec(x+s/2,y+s/2,0,bajando?40:-40,col,label);
 }
 
@@ -340,7 +340,7 @@ function drawVec(x,y,dx,dy,col,label,skip){
   drawingContext.shadowBlur=0;
   push();translate(x+dx,y+dy);rotate(ang);noStroke();
   beginShape();vertex(0,0);vertex(-hl,-hl/2);vertex(-hl,hl/2);endShape(CLOSE);
-  translate(5,0);rotate(-ang);fill(255);noStroke();textSize(9);text(label,0,4);pop();
+  translate(5,0);rotate(-ang);const isLtV=document.documentElement.getAttribute('data-theme')==='light';fill(isLtV?30:255);noStroke();textSize(9);text(label,0,4);pop();
 }
 
 // ═══════════════════════════════════════════════════════════

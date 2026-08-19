@@ -25,9 +25,13 @@
 
     @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
     :root{
-      --bg:#05070f;--surface:#0d1120;--border:rgba(255,255,255,0.08);
+      --bg:#05070f;--surface:#0d1120;--border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.16);
       --accent1:#00e5ff;--accent2:#ff3c6e;--accent3:#a3ff6b;--accent4:#ffd166;
       --text:#e8ecf8;--muted:#7a85a0;
+      --surface-alpha: rgba(8,16,36,0.92);
+      --sim-canvas-bg: rgba(5,7,15,0.8);
+      --shadow-main: 0 8px 24px rgba(0,0,0,0.5);
+      --card: rgba(255,255,255,0.04);
       
       /* Default active theme variables */
       --theme-accent: var(--accent3);
@@ -37,9 +41,13 @@
     }
 
     [data-theme="light"] {
-      --bg:#f1f5f9;--surface:#ffffff;--border:rgba(0,0,0,0.09);
+      --bg:#f1f5f9;--surface:#ffffff;--border:rgba(0,0,0,0.09);--border-strong:rgba(0,0,0,0.18);
       --accent1:#00838f;--accent2:#d81b60;--accent3:#2e7d32;--accent4:#b45309;
       --text:#0f172a;--muted:#64748b;
+      --surface-alpha: rgba(255,255,255,0.96);
+      --sim-canvas-bg: #f8fafc;
+      --shadow-main: 0 8px 24px rgba(15,23,42,0.08);
+      --card: rgba(0,0,0,0.03);
       --theme-accent: var(--accent3);
       --theme-accent-alpha: rgba(46, 125, 50, 0.08);
       --theme-accent-alpha-hover: rgba(46, 125, 50, 0.15);
@@ -90,9 +98,9 @@
       width: 100%;
       height: 45vh;
       min-height: 380px;
-      background: rgba(0, 0, 0, 0.4);
+      background: var(--sim-canvas-bg, rgba(0, 0, 0, 0.4));
       overflow: hidden;
-      border-bottom: 2px solid rgba(255,255,255,0.08);
+      border-bottom: 2px solid var(--border);
     }
 
     #defaultCanvas0, canvas {
@@ -110,7 +118,7 @@
       z-index: 200;
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px;
-      background: rgba(13,17,32,0.9);
+      background: var(--surface-alpha);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -118,7 +126,7 @@
       font-family: 'Space Mono', monospace;
       font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
       text-decoration: none;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      box-shadow: var(--shadow-main);
       transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.15s;
     }
     #btnVolver:hover {
@@ -131,12 +139,12 @@
     /* ── Panels ── */
     .controls, .data-panel {
       position: absolute;
-      background: rgba(8,16,36,0.92);
+      background: var(--surface-alpha, rgba(8,16,36,0.92));
       backdrop-filter: blur(12px);
       padding: 14px;
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-main, 0 8px 24px rgba(0,0,0,0.5));
       z-index: 100;
       top: 10px;
     }
@@ -177,7 +185,7 @@
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 4px;
     }
-    .param-label { font-family: 'Space Mono', monospace; font-size: 0.8em; color: rgba(255,255,255,0.7); }
+    .param-label { font-family: 'Space Mono', monospace; font-size: 0.8em; color: var(--muted); }
     .param-value {
       font-family: 'Space Mono', monospace; font-size: 0.82em; font-weight: 700; color: var(--theme-accent);
       background: var(--theme-accent-alpha); padding: 1px 8px;
@@ -186,7 +194,7 @@
     input[type="range"] {
       width: 100%; margin: 2px 0 0; height: 4px;
       -webkit-appearance: none; appearance: none;
-      background: rgba(255,255,255,0.15); border-radius: 2px; outline: none; cursor: pointer;
+      background: var(--border-strong, rgba(255,255,255,0.15)); border-radius: 2px; outline: none; cursor: pointer;
       transition: transform 0.2s, background-color 0.2s;
     }
     input[type="range"]:hover {
@@ -232,7 +240,7 @@
     .step-eq{font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--theme-accent);line-height:1.7;white-space:pre-wrap;word-break:break-all;}
 
     /* ── Data panel ── */
-    .data-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.78rem;}
+    .data-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:0.78rem;}
     .data-row:last-child{border-bottom:none;}
     .data-key{font-family:'Space Mono',monospace;color:var(--muted);font-size:0.65rem;}
     .data-val{font-family:'Space Mono',monospace;font-weight:700;font-variant-numeric:tabular-nums;}
@@ -253,16 +261,16 @@
     }
 
     .grafica-wrapper {
-      background: rgba(6,12,28,0.88);
-      border: 1px solid rgba(255,255,255,0.07);
+      background: var(--surface-alpha, rgba(6,12,28,0.88));
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 14px 14px 10px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05);
+      box-shadow: var(--shadow-main, 0 8px 28px rgba(0,0,0,0.55));
       position: relative;
-      transition: box-shadow 0.2s;
+      transition: box-shadow 0.2s, background-color 0.25s, border-color 0.25s;
     }
     .grafica-wrapper:hover {
-      box-shadow: 0 10px 36px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.08);
+      box-shadow: 0 10px 36px rgba(0,0,0,0.2);
     }
     .grafica-wrapper.glow-blue  { border-top: 2px solid rgba(79,172,254,0.5); }
     .grafica-wrapper.glow-green { border-top: 2px solid rgba(67,233,190,0.5); }
@@ -274,7 +282,7 @@
       margin-bottom: 10px;
     }
     .graph-title {
-      color: rgba(255,255,255,0.48);
+      color: var(--muted);
       font-size: clamp(0.76em,1.5vw,0.82em);
       font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
     }
@@ -292,41 +300,41 @@
     }
 
     .equation-box {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: var(--card, rgba(255,255,255,0.025));
+      border: 1px solid var(--border);
       border-radius: 8px; padding: 8px 12px; margin-top: 10px;
     }
     .equation {
       text-align: center;
       font-family: "Times New Roman",Times,serif;
-      font-size: clamp(0.9em,2vw,1.05em); color: rgba(255,255,255,0.9); margin: 0;
+      font-size: clamp(0.9em,2vw,1.05em); color: var(--text); margin: 0;
     }
     .equation-explanation {
-      font-size: clamp(0.68em,1.4vw,0.76em); color: rgba(255,255,255,0.38);
-      margin-top: 5px; text-align: center; line-height: 1.5;
+      font-size: clamp(0.68em,1.4vw,0.76em); color: var(--muted);
+      margin-top: 5px; text-align: center; line-height: 1.5; opacity: 0.8;
     }
 
     /* Zoom reset button */
     .zoom-reset {
       display: none;
       margin: 8px auto 0;
-      background: rgba(13, 17, 32, 0.92);
-      border: 1px solid rgba(0,229,255,0.5);
+      background: var(--surface-alpha);
+      border: 1px solid var(--theme-accent);
       border-radius: 6px;
-      color: rgba(0,229,255,0.8);
+      color: var(--theme-accent);
       font-family: 'Space Mono', monospace;
       font-size: 10px; font-weight: 700;
       padding: 5px 16px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      box-shadow: var(--shadow-main);
       transition: 0.2s;
       z-index: 20;
     }
-    .zoom-reset:hover { background: rgba(255,255,255,0.14); color: white; }
+    .zoom-reset:hover { background: var(--theme-accent-alpha-hover); color: var(--text); }
 
     .chart-hint {
-      text-align: center; font-size: 0.65em; color: rgba(255,255,255,0.18);
-      margin-top: 6px; letter-spacing: 0.03em; user-select: none;
+      text-align: center; font-size: 0.65em; color: var(--muted);
+      margin-top: 6px; letter-spacing: 0.03em; user-select: none; opacity: 0.7;
     }
 
     @media (max-width: 480px) {
@@ -745,7 +753,7 @@
     beginShape();
     vertex(0,0); vertex(-headLength,-headLength/2); vertex(-headLength,headLength/2);
     endShape(CLOSE);
-    translate(4,0); rotate(-angle); noStroke(); fill(255); textSize(10);
+    translate(4,0); rotate(-angle); noStroke(); const isLtA=document.documentElement.getAttribute('data-theme')==='light'; fill(isLtA?30:255); textSize(10);
     text(label,0,0);
     pop();
   }
