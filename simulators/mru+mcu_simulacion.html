@@ -575,7 +575,12 @@
       dt = stepPending ? (1/60) : Math.min(deltaTime / 1000, 0.05);
       tiempoFisico += dt;
     }
-    background(14, 22, 42);
+    const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLt) {
+      clear();
+    } else {
+      background(14, 22, 42);
+    }
     dibujarEscenario();
     if (!pausa || stepPending) {
       actualizarFisica(dt);
@@ -591,12 +596,13 @@
 
   // ── Escenario ────────────────────────────────────────────────────────────
   function dibujarEscenario() {
-    noFill(); stroke(255,255,255,18); strokeWeight(1);
+    const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+    noFill(); stroke(isLt ? color(0,0,0,30) : color(255,255,255,18)); strokeWeight(1);
     for (let i = 0; i <= 6; i++) {
       const x = map(i, 0, 6, PISTA_X0, CENTRO_X - radio);
       line(x, PISTA_Y+22, x, PISTA_Y+28);
     }
-    noStroke(); fill(30,32,38);
+    noStroke(); fill(isLt ? color(220,225,235) : color(30,32,38));
     rect(PISTA_X0, PISTA_Y+10, PISTA_PX, 18, 3);
 
     stroke(255,220,0,160); strokeWeight(2.5);
@@ -604,15 +610,15 @@
     for (let x = PISTA_X0 - offsetLane; x < CENTRO_X - radio; x += 36) {
       line(x+2, PISTA_Y+19, x+18, PISTA_Y+19);
     }
-    stroke(255,255,255,80); strokeWeight(1.5);
+    stroke(isLt ? color(0,0,0,80) : color(255,255,255,80)); strokeWeight(1.5);
     line(PISTA_X0, PISTA_Y+10, CENTRO_X-radio, PISTA_Y+10);
     line(PISTA_X0, PISTA_Y+28, CENTRO_X-radio, PISTA_Y+28);
 
-    noFill(); stroke(255,255,255,14); strokeWeight(20);
+    noFill(); stroke(isLt ? color(0,0,0,14) : color(255,255,255,14)); strokeWeight(20);
     circle(CENTRO_X, CENTRO_Y, radio*2);
-    stroke(255,255,255,55); strokeWeight(1.5);
+    stroke(isLt ? color(0,0,0,40) : color(255,255,255,55)); strokeWeight(1.5);
     circle(CENTRO_X, CENTRO_Y, radio*2);
-    stroke(255,255,255,30); strokeWeight(1);
+    stroke(isLt ? color(0,0,0,25) : color(255,255,255,30)); strokeWeight(1);
     line(CENTRO_X-6, CENTRO_Y, CENTRO_X+6, CENTRO_Y);
     line(CENTRO_X, CENTRO_Y-6, CENTRO_X, CENTRO_Y+6);
     noStroke(); fill(255,200,60,120);
@@ -1076,7 +1082,7 @@
 
 <style>
 .pv-section{padding:0 20px 32px;max-width:1200px;margin:16px auto 0;animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay: 0.38s;}
-.pv-card{background:rgba(13,17,32,0.9);border:1px solid rgba(255,255,255,0.07);border-left:3px solid var(--theme-accent);border-radius:12px;padding:20px 24px;}
+.pv-card{background:var(--surface-alpha);border:1px solid var(--border);border-left:3px solid var(--theme-accent);border-radius:12px;padding:20px 24px;box-shadow:var(--shadow-main);}
 .pv-card h4{font-family:'Space Mono',monospace;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--theme-accent);margin:0 0 12px;}
 .pv-texto{font-size:0.9rem;line-height:1.7;color:var(--text);margin-bottom:14px;}
 .pv-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}

@@ -564,7 +564,12 @@
 
   function draw() {
     if (!pausa) {
-      background(18, 28, 52);
+      const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLt) {
+        clear();
+      } else {
+        background(18, 28, 52);
+      }
       dibujarFondo();
       dibujarPista();
       actualizarPartículas();
@@ -576,13 +581,18 @@
   }
 
   function dibujarFondo() {
+    const isLt = document.documentElement.getAttribute('data-theme') === 'light';
     for (let y = 0; y < pista; y += 4) {
       const t = y / pista;
-      stroke(lerp(18,30,t), lerp(28,50,t), lerp(52,80,t));
+      if (isLt) {
+        stroke(lerp(230,240,t), lerp(235,245,t), lerp(240,250,t), 100);
+      } else {
+        stroke(lerp(18,30,t), lerp(28,50,t), lerp(52,80,t));
+      }
       strokeWeight(4);
       line(0, y, width, y);
     }
-    stroke(255,255,255,8); strokeWeight(1);
+    stroke(isLt ? color(0,0,0,10) : color(255,255,255,8)); strokeWeight(1);
     const vp = { x: width/2, y: pista*0.6 };
     for (let i = 0; i <= 8; i++) {
       const x0 = map(i,0,8,0,width);
@@ -591,15 +601,16 @@
   }
 
   function dibujarPista() {
-    noStroke(); fill(0,0,0,60); rect(0,pista,width,50);
-    fill(35,35,40); noStroke(); rect(0,pista-2,width,52);
+    const isLt = document.documentElement.getAttribute('data-theme') === 'light';
+    noStroke(); fill(isLt ? color(0,0,0,20) : color(0,0,0,60)); rect(0,pista,width,50);
+    fill(isLt ? color(220,225,235) : color(35,35,40)); noStroke(); rect(0,pista-2,width,52);
 
     const offset = (distancia*20) % 80;
     stroke(255,220,0,180); strokeWeight(3);
     for (let x = -80-offset; x < width+80; x += 80)
       line(x, pista+20, x+40, pista+20);
 
-    stroke(255,255,255,120); strokeWeight(2);
+    stroke(isLt ? color(0,0,0,30) : color(255,255,255,120)); strokeWeight(2);
     line(0,pista,width,pista);
     line(0,pista+40,width,pista+40);
 
@@ -609,9 +620,9 @@
     for (let m=inicio; m<=inicio+width/escala+paso; m+=paso) {
       const sx = width/2 + (m-distancia)*escala;
       if (sx<0||sx>width) continue;
-      stroke(255,255,255,40); strokeWeight(1);
+      stroke(isLt ? color(0,0,0,20) : color(255,255,255,40)); strokeWeight(1);
       line(sx,pista,sx,pista+8);
-      noStroke(); fill(255,255,255,100);
+      noStroke(); fill(isLt ? color(15,23,42) : color(255,255,255,100));
       text(m+'m', sx, pista+46);
     }
     textAlign(LEFT);
@@ -1145,7 +1156,7 @@
 
 <style>
 .pv-section{padding:0 20px 32px;max-width:1400px;margin:16px auto 0;animation: fade-in-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;animation-delay: 0.38s;}
-.pv-card{background:rgba(13,17,32,0.9);border:1px solid rgba(255,255,255,0.07);border-left:3px solid var(--theme-accent);border-radius:12px;padding:20px 24px;}
+.pv-card{background:var(--surface-alpha);border:1px solid var(--border);border-left:3px solid var(--theme-accent);border-radius:12px;padding:20px 24px;box-shadow:var(--shadow-main);}
 .pv-card h4{font-family:'Space Mono',monospace;font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--theme-accent);margin:0 0 12px;}
 .pv-texto{font-size:0.9rem;line-height:1.7;color:var(--text);margin-bottom:14px;}
 .pv-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
