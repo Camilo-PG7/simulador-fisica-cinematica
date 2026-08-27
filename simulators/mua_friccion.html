@@ -146,12 +146,13 @@
       border: 1px solid var(--border);
       box-shadow: var(--shadow-main, 0 8px 24px rgba(0,0,0,0.5));
       z-index: 100;
-      top: 10px;
+      top: 65px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
     }
     .controls {
       left: 10px;
       width: min(200px, calc(50% - 20px));
-      top: 52px;
     }
     .data-panel {
       right: 10px;

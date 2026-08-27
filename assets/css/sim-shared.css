@@ -257,7 +257,7 @@ body::before {
 /* ── Control panels (fixed desktop, stacked mobile) ─────────────── */
 .controls, .data-panel {
   position: absolute;
-  top: 10px;
+  top: 65px;
   background: var(--surface-alpha);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -267,13 +267,12 @@ body::before {
   box-shadow: var(--shadow-main);
   z-index: 200;
   overflow-y: auto;
-  max-height: calc(100vh - 20px);
+  max-height: calc(100vh - 80px);
 }
 
 .controls {
   left: 10px;
   width: var(--panel-w);
-  top: 52px;
 }
 
 .data-panel {
